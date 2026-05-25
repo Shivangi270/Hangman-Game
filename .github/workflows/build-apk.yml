@@ -11,34 +11,44 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+       Sir Setup Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 24
 
-      # 1. Automatically find your game's directory and create package.json there
-      - name: Locate Project & Initialize Node
+      # 1. Locate your game files and set up the clean directory structure
+      - name: Locate Project & Initialize Structure
         id: locate
         run: |
           TARGET_DIR=$(dirname $(find . -name "index.html" -not -path '*/.*' | head -n 1))
           echo "Found game folder at: $TARGET_DIR"
           echo "project_dir=$TARGET_DIR" >> $GITHUB_OUTPUT
           cd "$TARGET_DIR"
+          
+          # Initialize the dummy package file
           npm init -y
+          
+          # Create a clean asset distribution folder to bypass the webDir rule
+          mkdir -p www
+          
+          # Safely copy your asset folders and entry file into the new distribution folder
+          # omitting node_modules, android, and tracking folders
+          cp -r index.html css scripts images audios www/ 2>/dev/null || true
 
-      # 2. Install Capacitor packages cleanly
+      # 2. Install Capacitor core files
       - name: Install Capacitor CLI & Platforms
         run: |
           cd "${{ steps.locate.outputs.project_dir }}"
           npm install @capacitor/core@latest @capacitor/cli@latest @capacitor/android@latest
 
-      # 3. FIXED: Removed '--confirm' to prevent the exit code 1 error
+      # 3. FIXED: Changed --web-dir to 'www' to satisfy Capacitor's validation engine
       - name: Initialize Capacitor Config
         run: |
           cd "${{ steps.locate.outputs.project_dir }}"
-          npx cap init GallowsPeak com.yourcompany.gallowspeak --web-dir=.
+          npx cap init GallowsPeak com.yourcompany.gallowspeak --web-dir=www
 
-      # 4. Add Android Platform with directory guardrails
+      # 4. Add Android Platform
       - name: Add Android Platform
         run: |
           cd "${{ steps.locate.outputs.project_dir }}"
@@ -57,7 +67,7 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v4
 
-      # 5. Sync your HTML, CSS, and JS assets directly into native components
+      # 5. Sync your web directory assets into the newly mapped project
       - name: Capacitor Sync
         run: |
           cd "${{ steps.locate.outputs.project_dir }}"
@@ -70,7 +80,7 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleDebug --stacktrace
 
-      # 7. Export the newly created APK for download
+      # 7. Export the finished APK download
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
