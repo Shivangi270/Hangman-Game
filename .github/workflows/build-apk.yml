@@ -14,16 +14,21 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 20 # Kept at 20 for project compatibility, environment forced below
 
-      - name: Install Capacitor
+      - name: Install Dependencies & Build Web Project
+        run: |
+          npm install
+          # IF YOU HAVE A BUILD SCRIPT (e.g., Vite, React, Vue, Angular), UNCOMMENT THE LINE BELOW:
+          # npm run build 
+
+      - name: Install & Initialize Capacitor
         run: |
           npm install @capacitor/core @capacitor/cli @capacitor/android
-
-      - name: Initialize Capacitor
-        run: |
-          npx cap init GallowsPeak com.yourcompany.gallowspeak --web-dir=.
-          npx cap add android
+          # Change '--web-dir=.' to your actual production build folder (e.g., dist, build, www)
+          # If it's a plain HTML/JS game with index.html at root, leave it as '.' but ensure index.html exists.
+          npx cap init GallowsPeak com.yourcompany.gallowspeak --web-dir=dist --web-dir-fallback=index.html --confirm
+          npx cap add android || echo "Android folder may already exist, continuing..."
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -32,7 +37,7 @@ jobs:
           java-version: '17'
 
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
 
       - name: Sync and Build APK
         run: |
