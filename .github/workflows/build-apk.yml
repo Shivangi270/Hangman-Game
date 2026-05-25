@@ -16,32 +16,29 @@ jobs:
         with:
           node-version: 24
 
-      # Step 1: Automatically find your game's directory and create package.json there
+      # 1. Automatically find your game's directory and create package.json there
       - name: Locate Project & Initialize Node
         id: locate
         run: |
-          # Finds the directory containing index.html, skipping any hidden folders
           TARGET_DIR=$(dirname $(find . -name "index.html" -not -path '*/.*' | head -n 1))
           echo "Found game folder at: $TARGET_DIR"
           echo "project_dir=$TARGET_DIR" >> $GITHUB_OUTPUT
-          
-          # Navigate into it and create a dummy package.json
           cd "$TARGET_DIR"
           npm init -y
 
-      # Step 2: Install core Capacitor files inside the detected folder
+      # 2. Install Capacitor packages cleanly
       - name: Install Capacitor CLI & Platforms
         run: |
           cd "${{ steps.locate.outputs.project_dir }}"
-          npm install @capacitor/core @capacitor/cli @capacitor/android
+          npm install @capacitor/core@latest @capacitor/cli@latest @capacitor/android@latest
 
-      # Step 3: Initialize the Capacitor wrapper setting web-dir to the local folder
+      # 3. FIXED: Removed '--confirm' to prevent the exit code 1 error
       - name: Initialize Capacitor Config
         run: |
           cd "${{ steps.locate.outputs.project_dir }}"
-          npx cap init GallowsPeak com.yourcompany.gallowspeak --web-dir=. --confirm --force
+          npx cap init GallowsPeak com.yourcompany.gallowspeak --web-dir=.
 
-      # Step 4: Link Android natively
+      # 4. Add Android Platform with directory guardrails
       - name: Add Android Platform
         run: |
           cd "${{ steps.locate.outputs.project_dir }}"
@@ -60,20 +57,20 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v4
 
-      # Step 5: Transfer HTML, CSS, and JS files into native Android assets
+      # 5. Sync your HTML, CSS, and JS assets directly into native components
       - name: Capacitor Sync
         run: |
           cd "${{ steps.locate.outputs.project_dir }}"
           npx cap sync
 
-      # Step 6: Compile the source files into a debug APK package
+      # 6. Compile into a production-ready Debug APK package
       - name: Build Android APK
         run: |
           cd "${{ steps.locate.outputs.project_dir }}/android"
           chmod +x gradlew
           ./gradlew assembleDebug --stacktrace
 
-      # Step 7: Export the newly created APK for download
+      # 7. Export the newly created APK for download
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
