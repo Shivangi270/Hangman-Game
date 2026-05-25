@@ -6,35 +6,35 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    
-    # This temporarily bypasses the forced Node 24 crash while keeping it secure
-    env:
-      ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
 
     steps:
+      # 1. Upgraded to v4 to natively use Node 24 and kill the warning
       - name: Checkout code
         uses: actions/checkout@v4
         
+      # 2. Changed node-version to 24 to match GitHub's new environment standards
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
 
-      - name: Install Dependencies
-        run: |
-          npm install
-          # If your app uses a framework (Vite/React), uncomment the line below:
-          # npm run build 
+      - name: Install Project Dependencies
+        run: npm install
 
-      - name: Install and Setup Capacitor
+      - name: Install Capacitor CLI & Platforms
+        run: npm install @capacitor/core @capacitor/cli @capacitor/android
+
+      # 3. If this step fails, your repo doesn't have an index.html file at root.
+      - name: Initialize Capacitor Config
+        run: npx cap init GallowsPeak com.yourcompany.gallowspeak --web-dir=. --confirm --force
+
+      # 4. Isolated this step. If it fails, the 'android' folder already exists in your GitHub repo.
+      - name: Add Android Platform
         run: |
-          npm install @capacitor/core @capacitor/cli @capacitor/android
-          # Added --force to ensure initialization doesn't halt if a config file exists
-          npx cap init GallowsPeak com.yourcompany.gallowspeak --web-dir=. --confirm --force
-          
-          # Checks if android folder exists before creating it to prevent process crashes
           if [ ! -d "android" ]; then
             npx cap add android
+          else
+            echo "Android directory already exists, skipping addition."
           fi
 
       - name: Setup Java
@@ -44,17 +44,18 @@ jobs:
           java-version: '17'
 
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
 
-      - name: Sync and Build APK
+      - name: Capacitor Sync
+        run: npx cap sync
+
+      - name: Build Android APK
         run: |
-          npx cap sync
           cd android
           chmod +x gradlew
-          # Added --stacktrace to print the EXACT line error if compilation fails
           ./gradlew assembleDebug --stacktrace
 
-      - name: Upload APK
+      - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: gallowspeak-hangman
