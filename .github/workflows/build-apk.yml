@@ -8,53 +8,62 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Upgraded to v4 to natively use Node 24 and kill the warning
       - name: Checkout code
         uses: actions/checkout@v4
         
-      # 2. Changed node-version to 24 to match GitHub's new environment standards
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 24
 
-      - name: Install Project Dependencies
-        run: npm install
+      # Step 1: Create a temporary package.json so npm and Capacitor can run
+      - name: Initialize Dummy Node Project
+        run: |
+          npm init -y
 
+      # Step 2: Install Capacitor core dependencies
       - name: Install Capacitor CLI & Platforms
-        run: npm install @capacitor/core @capacitor/cli @capacitor/android
+        run: |
+          npm install @capacitor/core @capacitor/cli @capacitor/android
 
-      # 3. If this step fails, your repo doesn't have an index.html file at root.
+      # Step 3: Initialize Capacitor config pointing directly to your root directory
       - name: Initialize Capacitor Config
-        run: npx cap init GallowsPeak com.yourcompany.gallowspeak --web-dir=. --confirm --force
+        run: |
+          npx cap init GallowsPeak com.yourcompany.gallowspeak --web-dir=. --confirm --force
 
-      # 4. Isolated this step. If it fails, the 'android' folder already exists in your GitHub repo.
+      # Step 4: Add the Android platform project folder
       - name: Add Android Platform
         run: |
           if [ ! -d "android" ]; then
             npx cap add android
           else
-            echo "Android directory already exists, skipping addition."
+            echo "Android directory already exists, skipping."
           fi
 
+      # Step 5: Setup Android compilation environments
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
+      # Step 6: Setup Android SDK
       - name: Setup Android SDK
         uses: android-actions/setup-android@v4
 
+      # Step 7: Sync the HTML/CSS/JS files into the Android project assets
       - name: Capacitor Sync
-        run: npx cap sync
+        run: |
+          npx cap sync
 
+      # Step 8: Build the actual debug APK file
       - name: Build Android APK
         run: |
           cd android
           chmod +x gradlew
           ./gradlew assembleDebug --stacktrace
 
+      # Step 9: Make the final APK file available for download
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
