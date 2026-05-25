@@ -40,7 +40,7 @@ jobs:
           cd "${{ steps.locate.outputs.project_dir }}"
           npm install @capacitor/core@latest @capacitor/cli@latest @capacitor/android@latest
 
-      # 3. Changed --web-dir to 'www' to satisfy Capacitor's validation engine
+      # 3. Initialize Capacitor Config pointing to www folder
       - name: Initialize Capacitor Config
         run: |
           cd "${{ steps.locate.outputs.project_dir }}"
@@ -56,29 +56,30 @@ jobs:
             echo "Android directory already exists, skipping."
           fi
 
+      # 5. FIXED: Upgraded Java version from 17 to 21 to match modern Capacitor source compilation requirements
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: '21'
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v4
 
-      # 5. Sync your web directory assets into the newly mapped project
+      # 6. Sync your web directory assets into the native mapped project
       - name: Capacitor Sync
         run: |
           cd "${{ steps.locate.outputs.project_dir }}"
           npx cap sync
 
-      # 6. Compile into a production-ready Debug APK package
+      # 7. Compile into a production-ready Debug APK package
       - name: Build Android APK
         run: |
           cd "${{ steps.locate.outputs.project_dir }}/android"
           chmod +x gradlew
           ./gradlew assembleDebug --stacktrace
 
-      # 7. Export the finished APK download
+      # 8. Export the finished APK download
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
