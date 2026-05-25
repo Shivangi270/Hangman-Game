@@ -11,7 +11,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-       Sir Setup Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -33,7 +32,6 @@ jobs:
           mkdir -p www
           
           # Safely copy your asset folders and entry file into the new distribution folder
-          # omitting node_modules, android, and tracking folders
           cp -r index.html css scripts images audios www/ 2>/dev/null || true
 
       # 2. Install Capacitor core files
@@ -42,7 +40,7 @@ jobs:
           cd "${{ steps.locate.outputs.project_dir }}"
           npm install @capacitor/core@latest @capacitor/cli@latest @capacitor/android@latest
 
-      # 3. FIXED: Changed --web-dir to 'www' to satisfy Capacitor's validation engine
+      # 3. Changed --web-dir to 'www' to satisfy Capacitor's validation engine
       - name: Initialize Capacitor Config
         run: |
           cd "${{ steps.locate.outputs.project_dir }}"
