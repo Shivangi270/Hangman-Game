@@ -10,62 +10,72 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 24
 
-      # Step 1: Create a temporary package.json so npm and Capacitor can run
-      - name: Initialize Dummy Node Project
+      # Step 1: Automatically find your game's directory and create package.json there
+      - name: Locate Project & Initialize Node
+        id: locate
         run: |
+          # Finds the directory containing index.html, skipping any hidden folders
+          TARGET_DIR=$(dirname $(find . -name "index.html" -not -path '*/.*' | head -n 1))
+          echo "Found game folder at: $TARGET_DIR"
+          echo "project_dir=$TARGET_DIR" >> $GITHUB_OUTPUT
+          
+          # Navigate into it and create a dummy package.json
+          cd "$TARGET_DIR"
           npm init -y
 
-      # Step 2: Install Capacitor core dependencies
+      # Step 2: Install core Capacitor files inside the detected folder
       - name: Install Capacitor CLI & Platforms
         run: |
+          cd "${{ steps.locate.outputs.project_dir }}"
           npm install @capacitor/core @capacitor/cli @capacitor/android
 
-      # Step 3: Initialize Capacitor config pointing directly to your root directory
+      # Step 3: Initialize the Capacitor wrapper setting web-dir to the local folder
       - name: Initialize Capacitor Config
         run: |
+          cd "${{ steps.locate.outputs.project_dir }}"
           npx cap init GallowsPeak com.yourcompany.gallowspeak --web-dir=. --confirm --force
 
-      # Step 4: Add the Android platform project folder
+      # Step 4: Link Android natively
       - name: Add Android Platform
         run: |
+          cd "${{ steps.locate.outputs.project_dir }}"
           if [ ! -d "android" ]; then
             npx cap add android
           else
             echo "Android directory already exists, skipping."
           fi
 
-      # Step 5: Setup Android compilation environments
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      # Step 6: Setup Android SDK
       - name: Setup Android SDK
         uses: android-actions/setup-android@v4
 
-      # Step 7: Sync the HTML/CSS/JS files into the Android project assets
+      # Step 5: Transfer HTML, CSS, and JS files into native Android assets
       - name: Capacitor Sync
         run: |
+          cd "${{ steps.locate.outputs.project_dir }}"
           npx cap sync
 
-      # Step 8: Build the actual debug APK file
+      # Step 6: Compile the source files into a debug APK package
       - name: Build Android APK
         run: |
-          cd android
+          cd "${{ steps.locate.outputs.project_dir }}/android"
           chmod +x gradlew
           ./gradlew assembleDebug --stacktrace
 
-      # Step 9: Make the final APK file available for download
+      # Step 7: Export the newly created APK for download
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: gallowspeak-hangman
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          path: ${{ github.workspace }}/**/android/app/build/outputs/apk/debug/app-debug.apk
