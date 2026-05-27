@@ -402,21 +402,21 @@ const pullUp = () => {
 		ropeMid.gravity -= 0.034;
 		ropeMid.particles.splice(ropeMid.particles.length - 3, 2);
 		ropeRight.particles.splice(1, 3);
-		rotateAudio.volume = 0.1;
-		pullupAudio.volume = 0.2;
-		hangAudio.volume = 0.2;
+		if (typeof rotateAudio !== 'undefined') rotateAudio.volume = 0.1;
+		if (typeof pullupAudio !== 'undefined') pullupAudio.volume = 0.2;
+		if (typeof hangAudio !== 'undefined') hangAudio.volume = 0.2;
 		rollerAnimation.play();
-		if (allowAudio) {
-			rotateAudio.play();
-			pullupAudio.play();
+		if (typeof allowAudio !== 'undefined' && allowAudio) {
+			if (typeof rotateAudio !== 'undefined') rotateAudio.play();
+			if (typeof pullupAudio !== 'undefined') pullupAudio.play();
 		}
 		setTimeout(() => {
-			rotateAudio.pause();
-			pullupAudio.pause();
+			if (typeof rotateAudio !== 'undefined') rotateAudio.pause();
+			if (typeof pullupAudio !== 'undefined') pullupAudio.pause();
 			rollerAnimation.pause();
 		}, 2500);
 		if (ropeMid.gravity <= 0) {
-			if (allowAudio) hangAudio.play();
+			if (typeof allowAudio !== 'undefined' && allowAudio && typeof hangAudio !== 'undefined') hangAudio.play();
 			new Promise((resolve) => {
 				setTimeout(() => resolve(), 500);
 			})
