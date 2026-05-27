@@ -1,3 +1,89 @@
+// ============================================
+// ADMOB MONETIZATION - Banner + Interstitial Ads
+// ============================================
+
+let adInitialized = false;
+let interstitialReady = false;
+let winCounter = 0;
+let adsEnabled = true;
+
+// Test Ad IDs (replace with your real AdMob IDs when publishing)
+const TEST_BANNER_ID = 'ca-app-pub-3940256099942544/6300978111';
+const TEST_INTERSTITIAL_ID = 'ca-app-pub-3940256099942544/1033173711';
+
+// Replace these with your REAL AdMob IDs after testing
+const BANNER_AD_ID = TEST_BANNER_ID;
+const INTERSTITIAL_AD_ID = TEST_INTERSTITIAL_ID;
+
+function initializeAds() {
+    if (adInitialized) return;
+    
+    // Check if running in APK (AdMob available) or browser
+    if (typeof AdMob !== 'undefined') {
+        try {
+            // Create Banner Ad (shown at bottom)
+            AdMob.createBanner({
+                adId: BANNER_AD_ID,
+                position: AdMob.AD_POSITION.BOTTOM_CENTER,
+                autoShow: true,
+                isTesting: (BANNER_AD_ID === TEST_BANNER_ID)
+            });
+            
+            // Prepare Interstitial Ad
+            AdMob.prepareInterstitial({
+                adId: INTERSTITIAL_AD_ID,
+                isTesting: (INTERSTITIAL_AD_ID === TEST_INTERSTITIAL_ID)
+            });
+            
+            AdMob.on('admob.interstitial.events.LOAD', () => {
+                interstitialReady = true;
+                console.log('Interstitial ad loaded and ready');
+            });
+            
+            AdMob.on('admob.interstitial.events.CLOSE', () => {
+                interstitialReady = false;
+                // Prepare next interstitial for the next round
+                AdMob.prepareInterstitial({
+                    adId: INTERSTITIAL_AD_ID,
+                    isTesting: (INTERSTITIAL_AD_ID === TEST_INTERSTITIAL_ID)
+                });
+            });
+            
+            adInitialized = true;
+            console.log('AdMob initialized successfully');
+        } catch (error) {
+            console.log('AdMob error:', error);
+            adsEnabled = false;
+        }
+    } else {
+        console.log('Running in browser - ads disabled');
+        adsEnabled = false;
+    }
+}
+
+function showInterstitialAd() {
+    if (!adsEnabled || typeof AdMob === 'undefined') return;
+    
+    winCounter++;
+    
+    // Show interstitial every 3 wins (you can adjust this number)
+    if (winCounter >= 3 && interstitialReady) {
+        try {
+            AdMob.showInterstitial();
+            winCounter = 0; // Reset counter
+        } catch (error) {
+            console.log('Failed to show interstitial:', error);
+        }
+    }
+}
+
+// Initialize ads when game loads (with a small delay to ensure everything is ready)
+setTimeout(initializeAds, 1500);
+
+// ============================================
+// ORIGINAL GAME CODE STARTS HERE
+// ============================================
+
 const scene = document.querySelector("#scene");
 const parallaxInstance = new Parallax(scene);
 const alphaContainer = document.querySelector(".alpha-container");
@@ -344,6 +430,10 @@ const checkAnswer = (value) => {
 				);
 				if (allowAudio && winAudio && winAudio.play) winAudio.play();
 				updateCurrent();
+				
+				// SHOW INTERSTITIAL AD ON WIN (every 3 wins)
+				showInterstitialAd();
+				
 				if (mobileAndTabletCheck()) {
 					document.querySelector("body").classList.toggle("swipe");
 					document.addEventListener("touchstart", handleTouchStart, false);
