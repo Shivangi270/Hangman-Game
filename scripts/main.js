@@ -221,33 +221,44 @@ const enableAllButtons = () => {
 			button.disabled = false;
 	});
 };
-// Creating alphabet buttons...
+
+// FIXED: Creating alphabet buttons with proper click handling
 alphabet.forEach((letter) => {
 	let button = document.createElement("button");
 	button.className = "letter";
-	button.id = `${letter}`;
+	button.id = `letter-${letter}`;
 	button.value = letter;
 	button.innerText = letter;
-	button.addEventListener("click", () => disable(button));
-	button.addEventListener("click", () => {
-		if (!mobileAndTabletCheck()) {
-			if (nextButton?.disabled) checkAnswer(button.innerText);
-		} else {
-			if (!document.querySelector("body").classList.contains("swipe"))
-				checkAnswer(button.innerText);
-		}
-	});
-	// Add touch-friendly feedback for mobile
+	
+	// Combined click handling function to prevent multiple triggers
+	const handleLetterClick = () => {
+		// Don't process if button already disabled
+		if (button.disabled) return;
+		
+		// Disable immediately to prevent double-click
+		button.disabled = true;
+		button.style.opacity = "0.6";
+		
+		// Check the answer
+		checkAnswer(button.innerText);
+	};
+	
+	button.addEventListener("click", handleLetterClick);
+	
+	// Mobile touch events with proper handling
 	button.addEventListener("touchstart", (e) => {
-		// Prevent zoom on double-tap
 		e.preventDefault();
 		button.style.transform = "scale(0.95)";
+		handleLetterClick();
 	});
+	
 	button.addEventListener("touchend", () => {
 		button.style.transform = "scale(1)";
 	});
+	
 	alphaContainer.append(button);
 });
+
 const alphaButtons = document.querySelectorAll("button.letter");
 const fadeOut = {
 	keyframes: [
@@ -445,8 +456,10 @@ const checkAnswer = (value) => {
 			}
 		});
 	} else {
-		let button = document.getElementById(value);
-		button.style.border = "1px solid red";
+		let button = document.getElementById(`letter-${value}`);
+		if (button) {
+			button.style.border = "1px solid red";
+		}
 		if (allowAudio && wrongAudio && wrongAudio.play) {
 			wrongAudio.volume = 0.2;
 			wrongAudio.play();
@@ -456,6 +469,8 @@ const checkAnswer = (value) => {
 		if (guesses === 0) {
 			// Game over!
 			disableAllButtons();
+			// Disable next button when game is over
+			if (nextButton) nextButton.disabled = true;
 			if (allowAudio && loseAudio && loseAudio.play) {
 				loseAudio.volume = 0.2;
 				loseAudio.play();
@@ -492,7 +507,8 @@ const clearPrevWord = (all) => {
 	alphaButtons.forEach((button) => {
 		button.disabled = false;
 		button.style.border = "none";
-		button.style.transform = "scale(1)"; // Reset touch scale
+		button.style.opacity = "1";
+		button.style.transform = "scale(1)";
 	});
 	if (all && wordContainer.firstChild) {
 		// For mobile...
@@ -666,6 +682,14 @@ const startGame = () => {
 	closeMenu();
 	animateScene();
 	enableAllButtons();
+	
+	// Reset all letter buttons visually when starting a new game
+	alphaButtons.forEach(button => {
+		button.disabled = false;
+		button.style.opacity = "1";
+		button.style.border = "none";
+		button.style.transform = "scale(1)";
+	});
 };
 const toggleMenuList = (name) => {
 	let list = document.querySelector(`.${name}-list .list`);
