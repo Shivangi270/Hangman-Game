@@ -7,13 +7,10 @@ let interstitialReady = false;
 let winCounter = 0;
 let adsEnabled = true;
 
-// Test Ad IDs (replace with your real AdMob IDs when publishing)
-const TEST_BANNER_ID = 'ca-app-pub-3940256099942544/6300978111';
-const TEST_INTERSTITIAL_ID = 'ca-app-pub-3940256099942544/1033173711';
-
-// Replace these with your REAL AdMob IDs after testing
-const BANNER_AD_ID = TEST_BANNER_ID;
-const INTERSTITIAL_AD_ID = TEST_INTERSTITIAL_ID;
+// YOUR REAL AD UNIT IDs FROM ADMOB CONSOLE
+const BANNER_AD_ID = 'ca-app-pub-5834184703937435/4096610957';
+const INTERSTITIAL_AD_ID = 'ca-app-pub-5834184703937435/8224547901';
+// App ID: ca-app-pub-5834184703937435~3570019427 (used in native files)
 
 function initializeAds() {
     if (adInitialized) return;
@@ -26,13 +23,13 @@ function initializeAds() {
                 adId: BANNER_AD_ID,
                 position: AdMob.AD_POSITION.BOTTOM_CENTER,
                 autoShow: true,
-                isTesting: (BANNER_AD_ID === TEST_BANNER_ID)
+                isTesting: false  // Set to false since these are real ad IDs
             });
             
             // Prepare Interstitial Ad
             AdMob.prepareInterstitial({
                 adId: INTERSTITIAL_AD_ID,
-                isTesting: (INTERSTITIAL_AD_ID === TEST_INTERSTITIAL_ID)
+                isTesting: false
             });
             
             AdMob.on('admob.interstitial.events.LOAD', () => {
@@ -45,12 +42,12 @@ function initializeAds() {
                 // Prepare next interstitial for the next round
                 AdMob.prepareInterstitial({
                     adId: INTERSTITIAL_AD_ID,
-                    isTesting: (INTERSTITIAL_AD_ID === TEST_INTERSTITIAL_ID)
+                    isTesting: false
                 });
             });
             
             adInitialized = true;
-            console.log('AdMob initialized successfully');
+            console.log('AdMob initialized successfully with real ad IDs');
         } catch (error) {
             console.log('AdMob error:', error);
             adsEnabled = false;
@@ -519,7 +516,7 @@ const clearPrevWord = (all) => {
 	}
 	if (wordContainer.firstChild) {
 		while (wordContainer.firstChild.className !== "next-button") {
-			wordContainer.removeChild(wordContainer.firstChild);
+			wordContainer.removeChild(wordContainer.lastChild);
 		}
 	}
 };
