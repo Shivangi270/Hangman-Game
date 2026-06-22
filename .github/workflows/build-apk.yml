@@ -46,14 +46,28 @@ jobs:
           cd "${{ steps.locate.outputs.project_dir }}"
           npx cap init GallowsPeak com.yourcompany.gallowspeak --web-dir=www
 
-      # 4. Add Android Platform
+      # 4. ADD ANDROID PLATFORM (FIXED)
       - name: Add Android Platform
         run: |
           cd "${{ steps.locate.outputs.project_dir }}"
-          if [ ! -d "android" ]; then
-            npx cap add android
+          
+          # Remove existing android folder if it exists (to ensure clean setup)
+          if [ -d "android" ]; then
+            echo "Removing existing android folder..."
+            rm -rf android
+          fi
+          
+          # Add Android platform
+          echo "Adding Android platform..."
+          npx cap add android
+          
+          # Verify gradlew was created
+          if [ -f "android/gradlew" ]; then
+            echo "✅ gradlew created successfully!"
           else
-            echo "Android directory already exists, skipping."
+            echo "❌ gradlew not found! Listing android folder contents:"
+            ls -la android/
+            exit 1
           fi
 
       # 5. Setup Java 17
@@ -72,29 +86,16 @@ jobs:
           cd "${{ steps.locate.outputs.project_dir }}"
           npx cap sync
 
-      # 7. FIND AND BUILD - This step finds the correct location of gradlew
+      # 7. Build Android APK
       - name: Build Android APK
         run: |
-          cd "${{ steps.locate.outputs.project_dir }}"
-          
-          # Check if android folder exists
-          if [ -d "android" ]; then
-            cd android
-            echo "Found android folder, building..."
-            chmod +x gradlew
-            ./gradlew assembleDebug --stacktrace
-          else
-            echo "ERROR: android folder not found!"
-            echo "Contents of project directory:"
-            ls -la
-            exit 1
-          fi
+          cd "${{ steps.locate.outputs.project_dir }}/android"
+          chmod +x gradlew
+          ./gradlew assembleDebug --stacktrace
 
-      # 8. Upload the APK (try multiple possible locations)
+      # 8. Upload the APK
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: gallowspeak-hangman
-          path: |
-            ${{ steps.locate.outputs.project_dir }}/android/app/build/outputs/apk/debug/app-debug.apk
-            ${{ github.workspace }}/android/app/build/outputs/apk/debug/app-debug.apk
+          path: ${{ steps.locate.outputs.project_dir }}/android/app/build/outputs/apk/debug/app-debug.apk
