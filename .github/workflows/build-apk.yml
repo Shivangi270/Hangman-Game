@@ -46,36 +46,23 @@ jobs:
           cd "${{ steps.locate.outputs.project_dir }}"
           npx cap init GallowsPeak com.yourcompany.gallowspeak --web-dir=www
 
-      # 4. ADD ANDROID PLATFORM (FIXED)
+      # 4. Add Android Platform
       - name: Add Android Platform
         run: |
           cd "${{ steps.locate.outputs.project_dir }}"
-          
-          # Remove existing android folder if it exists (to ensure clean setup)
           if [ -d "android" ]; then
             echo "Removing existing android folder..."
             rm -rf android
           fi
-          
-          # Add Android platform
           echo "Adding Android platform..."
           npx cap add android
-          
-          # Verify gradlew was created
-          if [ -f "android/gradlew" ]; then
-            echo "✅ gradlew created successfully!"
-          else
-            echo "❌ gradlew not found! Listing android folder contents:"
-            ls -la android/
-            exit 1
-          fi
 
-      # 5. Setup Java 17
+      # 5. Setup Java 21 (Required for Capacitor 7+)
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: '21'
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
