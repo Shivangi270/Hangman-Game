@@ -56,7 +56,7 @@ jobs:
             echo "Android directory already exists, skipping."
           fi
 
-      # 5. Setup Java 17 (standard for Android builds)
+      # 5. Setup Java 17
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
@@ -72,16 +72,29 @@ jobs:
           cd "${{ steps.locate.outputs.project_dir }}"
           npx cap sync
 
-      # 7. Compile into a production-ready Debug APK package
+      # 7. FIND AND BUILD - This step finds the correct location of gradlew
       - name: Build Android APK
         run: |
-          cd "${{ steps.locate.outputs.project_dir }}/android"
-          chmod +x gradlew
-          ./gradlew assembleDebug --stacktrace
+          cd "${{ steps.locate.outputs.project_dir }}"
+          
+          # Check if android folder exists
+          if [ -d "android" ]; then
+            cd android
+            echo "Found android folder, building..."
+            chmod +x gradlew
+            ./gradlew assembleDebug --stacktrace
+          else
+            echo "ERROR: android folder not found!"
+            echo "Contents of project directory:"
+            ls -la
+            exit 1
+          fi
 
-      # 8. Export the finished APK download
+      # 8. Upload the APK (try multiple possible locations)
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: gallowspeak-hangman
-          path: ${{ github.workspace }}/**/android/app/build/outputs/apk/debug/app-debug.apk
+          path: |
+            ${{ steps.locate.outputs.project_dir }}/android/app/build/outputs/apk/debug/app-debug.apk
+            ${{ github.workspace }}/android/app/build/outputs/apk/debug/app-debug.apk
