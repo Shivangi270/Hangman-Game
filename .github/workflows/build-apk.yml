@@ -14,7 +14,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       # 1. Locate your game files and set up the clean directory structure
       - name: Locate Project & Initialize Structure
@@ -56,7 +56,7 @@ jobs:
             echo "Android directory already exists, skipping."
           fi
 
-      # 5. Setup Java (downgraded to 17 for better compatibility)
+      # 5. Setup Java 17 (standard for Android builds)
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
