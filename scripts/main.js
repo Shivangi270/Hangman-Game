@@ -6,14 +6,17 @@ let adInitialized = false;
 let interstitialReady = false;
 let winCounter = 0;
 let adsEnabled = true;
+let adInProgress = false; // Prevent multiple ad triggers
 
 // YOUR REAL AD UNIT IDs FROM ADMOB CONSOLE
 const BANNER_AD_ID = 'ca-app-pub-5834184703937435/4096610957';
 const INTERSTITIAL_AD_ID = 'ca-app-pub-5834184703937435/8224547901';
+const REWARDED_AD_ID = 'ca-app-pub-5834184703937435/1383839206'; // Test ID - replace with your rewarded ad ID
 
 // DEMO AD UNITS FOR TESTING (uncomment to test without approval)
 // const BANNER_AD_ID = 'ca-app-pub-3940256099942544/6300978111';
 // const INTERSTITIAL_AD_ID = 'ca-app-pub-3940256099942544/1033173711';
+// const REWARDED_AD_ID = 'ca-app-pub-3940256099942544/5224357317';
 
 function initializeAds() {
     if (adInitialized) return;
@@ -57,6 +60,89 @@ function initializeAds() {
     }
 }
 
+// ============================================
+// REWARDED AD FUNCTIONS
+// ============================================
+
+let rewardedAdReady = false;
+let pendingRewardCallback = null;
+let rewardType = '';
+
+function prepareRewardedAd() {
+    if (typeof AdMob === 'undefined') {
+        console.log('AdMob not available - skipping rewarded ad');
+        return;
+    }
+    
+    try {
+        AdMob.prepareRewardedVideoAd({
+            adId: REWARDED_AD_ID,
+            isTesting: false
+        });
+        
+        AdMob.on('admob.rewarded.events.LOAD', () => {
+            rewardedAdReady = true;
+            console.log('Rewarded ad loaded and ready');
+        });
+        
+        AdMob.on('admob.rewarded.events.REWARD', (reward) => {
+            console.log('User earned reward:', reward.amount, reward.type);
+            if (pendingRewardCallback) {
+                pendingRewardCallback();
+                pendingRewardCallback = null;
+            }
+        });
+        
+        AdMob.on('admob.rewarded.events.CLOSE', () => {
+            rewardedAdReady = false;
+            // Prepare next rewarded ad
+            prepareRewardedAd();
+        });
+    } catch (error) {
+        console.log('Rewarded ad error:', error);
+    }
+}
+
+function showRewardedAd(callback, type) {
+    if (!adsEnabled || typeof AdMob === 'undefined') {
+        // Fallback: give reward without ad (for testing)
+        console.log('Ad not available - giving reward for testing');
+        if (callback) callback();
+        return;
+    }
+    
+    if (adInProgress) {
+        console.log('Ad already in progress');
+        return;
+    }
+    
+    if (!rewardedAdReady) {
+        console.log('Rewarded ad not ready, preparing...');
+        prepareRewardedAd();
+        // Fallback: still reward after a delay for testing
+        setTimeout(() => {
+            if (callback) callback();
+        }, 1000);
+        return;
+    }
+    
+    adInProgress = true;
+    pendingRewardCallback = callback;
+    rewardType = type;
+    
+    try {
+        AdMob.showRewardedVideoAd();
+    } catch (error) {
+        console.log('Failed to show rewarded ad:', error);
+        adInProgress = false;
+        // Fallback reward
+        if (callback) callback();
+    }
+}
+
+// Prepare rewarded ad on load
+setTimeout(prepareRewardedAd, 2000);
+
 function showInterstitialAd() {
     if (!adsEnabled || typeof AdMob === 'undefined') return;
     
@@ -83,8 +169,8 @@ let streakData = {
     bestStreak: 0,
     lastPlayedDate: null,
     dailyRewardClaimed: false,
-    totalCoins: 100, // Starting coins for new users
-    totalDiamonds: 10 // Starting diamonds for new users
+    totalCoins: 100,
+    totalDiamonds: 10
 };
 
 const loadStreakData = () => {
@@ -96,7 +182,6 @@ const loadStreakData = () => {
             console.log('Error loading streak data:', e);
         }
     } else {
-        // New user - save defaults
         saveStreakData();
     }
 };
@@ -110,7 +195,6 @@ const updateStreak = () => {
     const lastPlayed = streakData.lastPlayedDate ? new Date(streakData.lastPlayedDate).toDateString() : null;
     
     if (lastPlayed === today) {
-        // Already played today
         console.log(`Streak: ${streakData.currentStreak} days (already played today)`);
         return;
     }
@@ -120,14 +204,12 @@ const updateStreak = () => {
     const yesterdayStr = yesterday.toDateString();
     
     if (lastPlayed === yesterdayStr) {
-        // Played yesterday - increase streak
         streakData.currentStreak += 1;
         if (streakData.currentStreak > streakData.bestStreak) {
             streakData.bestStreak = streakData.currentStreak;
         }
         streakData.lastPlayedDate = new Date().toISOString();
         
-        // Bonus rewards for streak milestones
         let bonusCoins = 0;
         let bonusDiamonds = 0;
         let bonusMessage = '';
@@ -157,9 +239,7 @@ const updateStreak = () => {
         saveStreakData();
         console.log(`Streak increased to: ${streakData.currentStreak} days`);
     } else if (lastPlayed !== today && lastPlayed !== yesterdayStr) {
-        // Missed a day - reset streak
         if (streakData.totalDiamonds >= 5 && streakData.currentStreak > 0) {
-            // Use streak freeze (costs 5 diamonds)
             streakData.totalDiamonds -= 5;
             streakData.lastPlayedDate = new Date().toISOString();
             showStreakBonus(`🛡️ Streak Freeze Used! (-5 Diamonds)`);
@@ -176,8 +256,8 @@ const updateStreak = () => {
 };
 
 const showStreakBonus = (message) => {
-    // Show a notification
     const notification = document.createElement('div');
+    notification.className = 'streak-notification';
     notification.style.cssText = `
         position: fixed;
         top: 20%;
@@ -193,14 +273,13 @@ const showStreakBonus = (message) => {
         border: 2px solid var(--second-button-color);
         box-shadow: 0 10px 40px rgba(0,0,0,0.8);
         max-width: 90%;
+        animation: streakPop 3s ease-in-out forwards;
     `;
     notification.textContent = message;
     document.body.appendChild(notification);
     
     setTimeout(() => {
-        notification.style.transition = 'opacity 0.5s';
-        notification.style.opacity = '0';
-        setTimeout(() => notification.remove(), 500);
+        notification.remove();
     }, 3000);
 };
 
@@ -218,31 +297,30 @@ let gameStats = {
     totalWordsCleared: 0
 };
 
+// Track the current word being guessed for showing correct answer
+let currentCorrectWord = '';
+
 const loadGameStats = () => {
     const saved = localStorage.getItem('gallowspeak_game_stats');
     if (saved) {
         try {
             gameStats = JSON.parse(saved);
-            // Ensure starting values for new fields
             if (gameStats.totalCoins === undefined) gameStats.totalCoins = 100;
             if (gameStats.totalDiamonds === undefined) gameStats.totalDiamonds = 10;
         } catch (e) {
             console.log('Error loading game stats:', e);
         }
     } else {
-        // New user - give starting bonus
         gameStats.totalCoins = 100;
         gameStats.totalDiamonds = 10;
         saveGameStats();
     }
-    // Also sync with streakData
     streakData.totalCoins = gameStats.totalCoins;
     streakData.totalDiamonds = gameStats.totalDiamonds;
 };
 
 const saveGameStats = () => {
     localStorage.setItem('gallowspeak_game_stats', JSON.stringify(gameStats));
-    // Sync streakData
     streakData.totalCoins = gameStats.totalCoins;
     streakData.totalDiamonds = gameStats.totalDiamonds;
     saveStreakData();
@@ -254,153 +332,363 @@ const onWordCleared = () => {
     gameStats.wordsCleared += 1;
     gameStats.totalWordsCleared += 1;
     
-    // Earn coins for each word cleared
     const wordBonus = 10;
     gameStats.totalCoins += wordBonus;
     
-    // Check if level is complete (3 words)
     if (gameStats.levelProgress >= 3) {
         // Level complete!
         gameStats.level += 1;
         gameStats.levelProgress = 0;
         gameStats.levelsCompleted += 1;
         
-        // Level completion bonus
         const levelBonusCoins = 30;
         gameStats.totalCoins += levelBonusCoins;
         
-        // Check for cluster completion (5 levels = 15 words)
         if (gameStats.levelsCompleted % 5 === 0) {
-            // Diamond bonus for cluster
             const clusterBonusDiamonds = 10;
             gameStats.totalDiamonds += clusterBonusDiamonds;
             showClusterComplete();
         }
         
-        // Sync streakData
         streakData.totalCoins = gameStats.totalCoins;
         streakData.totalDiamonds = gameStats.totalDiamonds;
         saveGameStats();
         saveStreakData();
         updateStatsUI();
         
-        // Show level complete popup
         showLevelComplete();
-        return true; // Level completed
+        return true;
     }
     
     saveGameStats();
     updateStatsUI();
-    return false; // Level not yet complete
+    return false;
 };
 
-// Show level complete popup
+// ============================================
+// IMPROVED POPUPS
+// ============================================
+
+let levelCoinsEarned = 0;
+let isLevelFailed = false;
+
+// Show Level Complete Popup
 const showLevelComplete = () => {
-    // Update the game over modal content
     const modal = document.querySelector('.gameover-modal');
+    const box = modal.querySelector('.gameover-box');
+    const content = modal.querySelector('.gameover-content');
     const title = modal.querySelector('.text');
-    const scoreLabel = modal.querySelector('.score-cont span:first-child');
-    const scoreValue = modal.querySelector('.score-cont .score');
-    const bestLabel = modal.querySelector('.best-score-cont span:first-child');
-    const bestValue = modal.querySelector('.best-score-cont .best-score');
-    const mainMenuBtn = modal.querySelector('.main-menu');
-    const playAgainBtn = modal.querySelector('.play-again');
+    const data = modal.querySelector('.gameover-data');
+    const buttons = modal.querySelector('.buttons');
     
-    // Change to level complete content
+    // Clear existing buttons
+    buttons.innerHTML = '';
+    
+    // Store earned coins for this level
+    levelCoinsEarned = 30; // Base level bonus
+    
+    // Update modal content
     title.textContent = '🎉 LEVEL CLEAR!';
-    scoreLabel.textContent = '⭐ Coins Earned:';
-    scoreValue.textContent = `+30`;
-    bestLabel.textContent = '💰 Total Coins:';
-    bestValue.textContent = `${gameStats.totalCoins}`;
-    playAgainBtn.textContent = '▶ Next Level';
-    playAgainBtn.onclick = nextLevel;
     
-    // Show the modal
-    const container = document.querySelector('.gameover-box');
-    gsap.set(container, { scale: 1.6 });
-    gsap.set(modal, { opacity: 0 });
-    gsap
-        .timeline({ defaults: { duration: 0.25, ease: 'none' } })
-        .to(modal, { visibility: 'visible' })
-        .to(modal, { opacity: 1 })
-        .to(container, { scale: 1, opacity: 1 }, '<');
+    // Update data section
+    data.innerHTML = `
+        <div class="level-info" style="text-align: center; width: 100%;">
+            <div style="font-size: 1.8rem; color: var(--second-button-color); font-weight: bold;">
+                ${gameStats.level - 1} ➜ ${gameStats.level}
+            </div>
+            <div style="display: flex; justify-content: space-around; width: 100%; margin-top: 15px; font-size: 1.1rem;">
+                <div>🪙 <span style="color: var(--second-button-color);">+${levelCoinsEarned}</span></div>
+                <div>📊 ${gameStats.totalWordsCleared} words</div>
+                <div>💎 <span style="color: gold;">${gameStats.totalDiamonds}</span></div>
+            </div>
+            <div style="margin-top: 10px; font-size: 0.9rem; opacity: 0.6;">
+                Total Coins: 🪙 ${gameStats.totalCoins}
+            </div>
+        </div>
+    `;
+    
+    // Create buttons
+    buttons.style.width = '90%';
+    buttons.style.display = 'flex';
+    buttons.style.flexDirection = 'row';
+    buttons.style.justifyContent = 'center';
+    buttons.style.gap = '10px';
+    buttons.style.marginTop = '15px';
+    
+    // Button 1: Menu (always present)
+    const menuBtn = document.createElement('button');
+    menuBtn.className = 'menu-button';
+    menuBtn.style.cssText = `
+        flex: 1;
+        min-width: 80px;
+        height: 45px;
+        font-size: 0.9rem;
+        background: var(--dark-main-color);
+        color: white;
+        border: 2px solid var(--main-button-color);
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: bold;
+    `;
+    menuBtn.textContent = '🏠 Menu';
+    menuBtn.addEventListener('click', () => {
+        closeLevelPopup();
+        showMenu();
+    });
+    
+    // Button 2: Next Level (with coins)
+    const nextBtn = document.createElement('button');
+    nextBtn.className = 'menu-button';
+    nextBtn.style.cssText = `
+        flex: 2;
+        min-width: 120px;
+        height: 45px;
+        font-size: 1rem;
+        background: var(--second-button-color);
+        color: var(--dark-main-color);
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    `;
+    nextBtn.innerHTML = `▶ Next  +🪙${levelCoinsEarned}`;
+    nextBtn.addEventListener('click', () => {
+        // Coins already added in onWordCleared
+        closeLevelPopup();
+        continueToNextLevel();
+    });
+    
+    // Button 3: Double Coins (rewarded ad)
+    const doubleBtn = document.createElement('button');
+    doubleBtn.className = 'menu-button';
+    doubleBtn.style.cssText = `
+        flex: 2;
+        min-width: 120px;
+        height: 45px;
+        font-size: 0.9rem;
+        background: linear-gradient(135deg, #f7971e, #ffd200);
+        color: var(--dark-main-color);
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    `;
+    doubleBtn.innerHTML = `🎬 Double 🪙 (20s)`;
+    doubleBtn.addEventListener('click', () => {
+        doubleBtn.disabled = true;
+        doubleBtn.textContent = '⏳ Loading...';
+        showRewardedAd(() => {
+            // Double the coins
+            const doubledCoins = levelCoinsEarned;
+            gameStats.totalCoins += doubledCoins;
+            saveGameStats();
+            updateStatsUI();
+            levelCoinsEarned *= 2;
+            doubleBtn.textContent = `✅ +${doubledCoins} 🪙`;
+            doubleBtn.style.background = '#37b666';
+            doubleBtn.style.color = 'white';
+            // Update the next button text
+            nextBtn.innerHTML = `▶ Next  +🪙${levelCoinsEarned}`;
+            // Update data display
+            const coinDisplay = data.querySelector('.level-info div:first-child');
+            if (coinDisplay) {
+                coinDisplay.innerHTML = `🪙 +${levelCoinsEarned} coins!`;
+            }
+            doubleBtn.disabled = false;
+            adInProgress = false;
+        }, 'double_coins');
+    });
+    
+    buttons.appendChild(menuBtn);
+    buttons.appendChild(nextBtn);
+    buttons.appendChild(doubleBtn);
+    
+    // Show the modal with animation
+    modal.style.visibility = 'visible';
+    modal.style.opacity = '0';
+    box.style.transform = 'scale(0.8)';
+    
+    gsap.to(modal, { opacity: 1, duration: 0.3 });
+    gsap.to(box, { scale: 1, duration: 0.4, ease: 'back.out(1.7)' });
+    
     parallaxInstance.disable();
+    isLevelFailed = false;
+};
+
+// Show Level Failed Popup
+const showLevelFailed = (correctWord) => {
+    const modal = document.querySelector('.gameover-modal');
+    const box = modal.querySelector('.gameover-box');
+    const content = modal.querySelector('.gameover-content');
+    const title = modal.querySelector('.text');
+    const data = modal.querySelector('.gameover-data');
+    const buttons = modal.querySelector('.buttons');
+    
+    // Clear existing buttons
+    buttons.innerHTML = '';
+    
+    // Update modal content
+    title.textContent = '😢 LEVEL FAILED';
+    
+    // Update data section
+    data.innerHTML = `
+        <div class="level-info" style="text-align: center; width: 100%;">
+            <div style="font-size: 1.5rem; color: #ff6b6b; font-weight: bold; margin-bottom: 10px;">
+                The word was:
+            </div>
+            <div style="font-size: 2.5rem; color: white; font-weight: bold; letter-spacing: 4px; 
+                        background: rgba(255,255,255,0.1); padding: 10px 20px; border-radius: 10px;
+                        border: 2px solid rgba(255,255,255,0.2);">
+                ${correctWord.toUpperCase()}
+            </div>
+            <div style="display: flex; justify-content: space-around; width: 100%; margin-top: 15px; font-size: 1rem;">
+                <div>🪙 <span style="color: var(--second-button-color);">${gameStats.totalCoins}</span></div>
+                <div>📊 ${gameStats.totalWordsCleared} words</div>
+                <div>💎 <span style="color: gold;">${gameStats.totalDiamonds}</span></div>
+            </div>
+        </div>
+    `;
+    
+    // Create buttons
+    buttons.style.width = '90%';
+    buttons.style.display = 'flex';
+    buttons.style.flexDirection = 'row';
+    buttons.style.justifyContent = 'center';
+    buttons.style.gap = '10px';
+    buttons.style.marginTop = '15px';
+    
+    // Button 1: Menu (always present)
+    const menuBtn = document.createElement('button');
+    menuBtn.className = 'menu-button';
+    menuBtn.style.cssText = `
+        flex: 1;
+        min-width: 80px;
+        height: 45px;
+        font-size: 0.9rem;
+        background: var(--dark-main-color);
+        color: white;
+        border: 2px solid var(--main-button-color);
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: bold;
+    `;
+    menuBtn.textContent = '🏠 Menu';
+    menuBtn.addEventListener('click', () => {
+        closeLevelPopup();
+        showMenu();
+    });
+    
+    // Button 2: Try Again (watch 15s ad)
+    const retryBtn = document.createElement('button');
+    retryBtn.className = 'menu-button';
+    retryBtn.style.cssText = `
+        flex: 2;
+        min-width: 120px;
+        height: 45px;
+        font-size: 1rem;
+        background: linear-gradient(135deg, #4a00e0, #8e2de2);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    `;
+    retryBtn.innerHTML = `🎬 Try Again (15s)`;
+    retryBtn.addEventListener('click', () => {
+        retryBtn.disabled = true;
+        retryBtn.textContent = '⏳ Loading...';
+        showRewardedAd(() => {
+            // Retry the level - reset with same word
+            closeLevelPopup();
+            resetCurrentLevel();
+            retryBtn.disabled = false;
+            adInProgress = false;
+        }, 'retry_level');
+    });
+    
+    buttons.appendChild(menuBtn);
+    buttons.appendChild(retryBtn);
+    
+    // Show the modal with animation
+    modal.style.visibility = 'visible';
+    modal.style.opacity = '0';
+    box.style.transform = 'scale(0.8)';
+    
+    gsap.to(modal, { opacity: 1, duration: 0.3 });
+    gsap.to(box, { scale: 1, duration: 0.4, ease: 'back.out(1.7)' });
+    
+    parallaxInstance.disable();
+    isLevelFailed = true;
+};
+
+const closeLevelPopup = () => {
+    const modal = document.querySelector('.gameover-modal');
+    const box = modal.querySelector('.gameover-box');
+    
+    gsap.to(box, { scale: 0.8, duration: 0.2 });
+    gsap.to(modal, { 
+        opacity: 0, 
+        duration: 0.2,
+        onComplete: () => {
+            modal.style.visibility = 'collapse';
+        }
+    });
+    parallaxInstance.enable();
+    updateStatsUI();
+};
+
+const continueToNextLevel = () => {
+    // Reset game for next level
+    words.length = 0;
+    const savedData = sessionStorage.getItem('currentData');
+    if (savedData) {
+        words = JSON.parse(savedData);
+    }
+    setupGame();
+    hideLetters(wordArray);
+    createLetterElements(wordArray);
+    enableAllButtons();
+    updateStatsUI();
+};
+
+const resetCurrentLevel = () => {
+    // Reset the current word array
+    const word = currentCorrectWord;
+    if (word) {
+        wordArray = word.toUpperCase().split('');
+        hidden = {};
+        // Reset word container
+        clearPrevWord(true);
+        hideLetters(wordArray);
+        createLetterElements(wordArray);
+        resetGuesses();
+        enableAllButtons();
+        updateStatsUI();
+    } else {
+        // Fallback: get a new word
+        setupGame();
+        hideLetters(wordArray);
+        createLetterElements(wordArray);
+        enableAllButtons();
+    }
 };
 
 // Show cluster complete popup
 const showClusterComplete = () => {
     showStreakBonus(`💎 Cluster Complete! +10 Diamonds! 💎`);
 };
-
-// Next level function
-const nextLevel = () => {
-    const modal = document.querySelector('.gameover-modal');
-    gsap
-        .to('.gameover-box', {
-            duration: 0.25,
-            scale: 1.6,
-            opacity: 0,
-            ease: 'none',
-        })
-        .then(() => {
-            modal.style.visibility = 'collapse';
-            // Reset game for next level
-            words.length = 0;
-            const savedData = sessionStorage.getItem('currentData');
-            if (savedData) {
-                words = JSON.parse(savedData);
-            }
-            setupGame();
-            hideLetters(wordArray);
-            createLetterElements(wordArray);
-            enableAllButtons();
-            parallaxInstance.enable();
-            updateStatsUI();
-        });
-};
-
-// Update UI with stats
-const updateStatsUI = () => {
-    // Find or create stats display
-    let statsContainer = document.querySelector('.stats-container');
-    if (!statsContainer) {
-        statsContainer = document.createElement('div');
-        statsContainer.className = 'stats-container';
-        statsContainer.style.cssText = `
-            position: fixed;
-            top: 10px;
-            left: 10px;
-            z-index: 50;
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-            font-size: 0.8rem;
-            color: white;
-            opacity: 0.7;
-            pointer-events: none;
-        `;
-        document.body.appendChild(statsContainer);
-        
-        // Create stat elements
-        const stats = ['streak', 'level', 'coins', 'diamonds'];
-        stats.forEach(name => {
-            const el = document.createElement('div');
-            el.id = `stat-${name}`;
-            statsContainer.appendChild(el);
-        });
-    }
-    
-    document.getElementById('stat-streak').textContent = `🔥 ${streakData.currentStreak}d streak`;
-    document.getElementById('stat-level').textContent = `📚 Level ${gameStats.level}`;
-    document.getElementById('stat-coins').textContent = `🪙 ${gameStats.totalCoins}`;
-    document.getElementById('stat-diamonds').textContent = `💎 ${gameStats.totalDiamonds}`;
-};
-
-// Initialize on game load
-loadStreakData();
-loadGameStats();
-updateStreak();
-updateStatsUI();
 
 // ============================================
 // ORIGINAL GAME CODE (Modified)
@@ -450,10 +738,12 @@ const updateCurrent = () => {
 const getRandomWord = () => {
     if (words.length > 0) {
         let currentWord = words[current].toUpperCase().split("");
+        currentCorrectWord = currentWord.join('');
         words.splice(current, 1);
         return currentWord;
     } else {
         console.warn("Words array is empty, using fallback word");
+        currentCorrectWord = 'HANGMAN';
         return "HANGMAN".split("");
     }
 };
@@ -664,7 +954,7 @@ const CreateNextButton = () => {
     wordContainer.append(nextButton);
 };
 
-// MODIFIED: checkAnswer with level system integration
+// MODIFIED: checkAnswer with level system integration and game over handling
 const checkAnswer = (value) => {
     let keys = Object.keys(hidden).filter((k) => hidden[k] === value);
     if (keys.length !== 0) {
@@ -692,12 +982,11 @@ const checkAnswer = (value) => {
                 if (allowAudio && winAudio && winAudio.play) winAudio.play();
                 updateCurrent();
                 
-                // === NEW: Level System Integration ===
+                // === Level System Integration ===
                 const levelCompleted = onWordCleared();
                 
                 if (levelCompleted) {
-                    // Level complete - show level popup (handled in onWordCleared)
-                    // Disable buttons while popup shows
+                    // Level complete - show level popup
                     disableAllButtons();
                     return;
                 }
@@ -727,40 +1016,22 @@ const checkAnswer = (value) => {
         reduceGuesses();
         if (typeof pullUp === 'function') pullUp();
         if (guesses === 0) {
-            // Game over!
+            // Game over / Level Failed!
             disableAllButtons();
             if (nextButton) nextButton.disabled = true;
             if (allowAudio && loseAudio && loseAudio.play) {
                 loseAudio.volume = 0.2;
                 loseAudio.play();
             }
+            
+            // Store the correct word before showing popup
+            const correctWord = currentCorrectWord;
+            currentCorrectWord = '';
+            
             setTimeout(() => {
-                let modal = document.querySelector(".gameover-modal");
-                const title = modal.querySelector('.text');
-                const scoreLabel = modal.querySelector('.score-cont span:first-child');
-                const scoreValue = modal.querySelector('.score-cont .score');
-                const bestLabel = modal.querySelector('.best-score-cont span:first-child');
-                const bestValue = modal.querySelector('.best-score-cont .best-score');
-                const playAgainBtn = modal.querySelector('.play-again');
-                
-                // Restore game over content
-                title.textContent = 'GAME OVER';
-                scoreLabel.textContent = 'Score:';
-                scoreValue.textContent = score;
-                bestLabel.textContent = 'Best score:';
-                bestValue.textContent = bestScore;
-                playAgainBtn.textContent = '🔄 Try Again';
-                playAgainBtn.onclick = restartGame;
-                
-                gsap.set(".gameover-box", { scale: 1.6 });
-                gsap.set(modal, { opacity: 0 });
-                gsap
-                    .timeline({ defaults: { duration: 0.25, ease: "none" } })
-                    .to(modal, { visibility: "visible" })
-                    .to(modal, { opacity: 1 })
-                    .to(".gameover-box", { scale: 1, opacity: 1 }, "<");
-                parallaxInstance.disable();
-            }, 2000);
+                // Show level failed popup with correct word
+                showLevelFailed(correctWord);
+            }, 1000);
         }
     }
 };
@@ -791,7 +1062,7 @@ const clearPrevWord = (all) => {
     }
     if (wordContainer.firstChild) {
         while (wordContainer.firstChild.className !== "next-button") {
-            wordContainer.removeChild(wordContainer.firstChild);
+            wordContainer.removeChild(wordContainer.lastChild);
         }
     }
 };
@@ -953,6 +1224,7 @@ const setupGame = () => {
     wordArray = getRandomWord();
     hidden = {};
     nextButton = undefined;
+    isLevelFailed = false;
 };
 
 const startGame = () => {
@@ -968,7 +1240,6 @@ const startGame = () => {
         button.style.border = "none";
         button.style.transform = "scale(1)";
     });
-    // Update streak when game starts
     updateStreak();
 };
 
@@ -1003,11 +1274,41 @@ const toggleMenuList = (name) => {
     list.classList.toggle("opened-list");
 };
 
+const updateStatsUI = () => {
+    let statsContainer = document.querySelector('.stats-container');
+    if (!statsContainer) {
+        statsContainer = document.createElement('div');
+        statsContainer.className = 'stats-container';
+        document.body.appendChild(statsContainer);
+        
+        const stats = ['streak', 'level', 'coins', 'diamonds'];
+        stats.forEach(name => {
+            const el = document.createElement('div');
+            el.id = `stat-${name}`;
+            statsContainer.appendChild(el);
+        });
+    }
+    
+    const streakEl = document.getElementById('stat-streak');
+    if (streakEl) streakEl.textContent = `🔥 ${streakData.currentStreak || 0}d`;
+    
+    const levelEl = document.getElementById('stat-level');
+    if (levelEl) levelEl.textContent = `📚 ${gameStats.level || 1}`;
+    
+    const coinsEl = document.getElementById('stat-coins');
+    if (coinsEl) coinsEl.textContent = `🪙 ${gameStats.totalCoins || 0}`;
+    
+    const diamondsEl = document.getElementById('stat-diamonds');
+    if (diamondsEl) diamondsEl.textContent = `💎 ${gameStats.totalDiamonds || 0}`;
+};
+
 let catButton = document.querySelector(".category-button");
 let diffButton = document.querySelector(".difficulty-button");
 let playButton = document.querySelector(".start-game");
 
 loadSavedBestScore();
+loadGameStats();
+updateStatsUI();
 
 document.querySelector(".start-game").addEventListener("click", () => {
     catButton.disabled = true;
@@ -1121,7 +1422,6 @@ document
             });
     });
 
-// Update the play-again click handler
 document
     .querySelector(".gameover-box .play-again")
     .addEventListener("click", restartGame);
