@@ -47,8 +47,53 @@
     --dark-main-color: rgba(17, 3, 32, 1);
 }
 
+/* ============================================
+   THEME VARIABLES
+   ============================================ */
+
+:root {
+    /* Dark Theme (Default) */
+    --bg-primary: rgba(17, 3, 32, 1);
+    --bg-secondary: rgba(14, 5, 25, 1);
+    --bg-footer: rgba(14, 5, 25, 1);
+    --bg-footer-gradient: rgba(14, 5, 25, 1);
+    --text-primary: #ffffff;
+    --text-secondary: rgba(255, 255, 255, 0.8);
+    --text-muted: rgba(255, 255, 255, 0.5);
+    --card-bg: rgba(224, 214, 235, 0.25);
+    --card-shadow: inset 0 0px 10px -2px rgba(0, 0, 0, 0.7);
+    --modal-bg: rgba(17, 3, 32, 0.95);
+    --stats-bg: rgba(17, 3, 32, 0.4);
+    --border-color: rgba(255, 255, 255, 0.1);
+    --cover-shadow: rgb(161, 127, 54);
+    --cover-highlight: rgb(242, 248, 150);
+    --filter-brightness: brightness(1) saturate(1);
+    --modal-overlay: rgba(17, 3, 32, 0.8);
+}
+
+[data-theme="light"] {
+    --bg-primary: rgba(240, 248, 255, 1);
+    --bg-secondary: rgba(200, 220, 240, 1);
+    --bg-footer: rgba(200, 220, 240, 0.95);
+    --bg-footer-gradient: rgba(200, 220, 240, 0.95);
+    --text-primary: #1a1a2e;
+    --text-secondary: rgba(26, 26, 46, 0.8);
+    --text-muted: rgba(26, 26, 46, 0.5);
+    --card-bg: rgba(255, 255, 255, 0.6);
+    --card-shadow: inset 0 0px 10px -2px rgba(0, 0, 0, 0.15);
+    --modal-bg: rgba(240, 248, 255, 0.95);
+    --stats-bg: rgba(255, 255, 255, 0.3);
+    --border-color: rgba(26, 26, 46, 0.1);
+    --cover-shadow: rgb(180, 150, 80);
+    --cover-highlight: rgb(255, 255, 200);
+    --filter-brightness: brightness(1.15) saturate(1.1);
+    --modal-overlay: rgba(240, 248, 255, 0.7);
+}
+
 body {
     overflow: hidden;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
 }
 
 main {
@@ -70,7 +115,7 @@ div.loading-screen {
     width: 100%;
     margin: auto;
     z-index: 1000;
-    background-color: var(--dark-main-color);
+    background-color: var(--bg-primary);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -226,8 +271,8 @@ footer {
     height: 30vh;
     background-image: linear-gradient(
         to top,
-        rgba(14, 5, 25, 1) 50%,
-        rgba(15, 6, 33, 1) 65%,
+        var(--bg-footer) 50%,
+        var(--bg-footer) 65%,
         rgba(21, 3, 41, 0.7) 85%,
         rgba(21, 3, 41, 0.4) 95%,
         rgba(21, 3, 41, 0) 100%
@@ -294,15 +339,15 @@ li.letter {
     width: 60px;
     min-width: 20px;
     min-height: 30px;
-    background-color: rgba(224, 214, 235, 0.25);
-    color: white;
+    background-color: var(--card-bg);
+    color: var(--text-primary);
     font-size: 1.5rem;
     font-weight: bold;
     text-align: center;
     flex-shrink: 1;
     overflow: hidden;
     transition: border 300ms;
-    box-shadow: inset 0 0px 10px -2px rgba(0, 0, 0, 0.7);
+    box-shadow: var(--card-shadow);
 }
 
 .cover {
@@ -312,8 +357,8 @@ li.letter {
     right: 0;
     left: 0;
     background-color: var(--second-button-color);
-    box-shadow: inset 0 -15px 10px -8px rgb(161, 127, 54),
-        inset 0 15px 15px -10px rgb(242, 248, 150);
+    box-shadow: inset 0 -15px 10px -8px var(--cover-shadow),
+                inset 0 15px 15px -10px var(--cover-highlight);
     transform-origin: top;
     z-index: 1;
     transition: transform 400ms ease-in-out;
@@ -468,14 +513,14 @@ li.letter {
 .category span {
     margin-top: 0;
     text-align: center;
-    color: white;
+    color: var(--text-primary);
     font-size: 2.5rem;
     font-family: "Luckiest Guy", "Trebuchet MS", "Lucida Sans Unicode",
         "Lucida Grande", "Lucida Sans", Arial, sans-serif;
     letter-spacing: 2px;
     display: flex;
     justify-content: center;
-    opacity: 0.8;
+    opacity: 0.9;
 }
 
 .category span:nth-child(2) {
@@ -484,7 +529,7 @@ li.letter {
     font-family: "Balsamiq Sans", "Trebuchet MS", "Lucida Sans Unicode",
         "Lucida Grande", "Lucida Sans", Arial, sans-serif;
     font-size: 1.2rem;
-    opacity: 0.5;
+    opacity: 0.6;
 }
 
 .score-container {
@@ -506,7 +551,7 @@ li.letter {
 .score-container .guesses-left::before {
     content: "Guesses left:";
     font-size: 1.2rem;
-    color: white;
+    color: var(--text-secondary);
     opacity: 0.8;
     display: flex;
     align-items: center;
@@ -525,7 +570,7 @@ li.letter {
 .score-container .score::before {
     content: "Score:";
     font-size: 1.2rem;
-    color: white;
+    color: var(--text-secondary);
     opacity: 0.8;
     display: flex;
     align-items: center;
@@ -556,7 +601,7 @@ li.letter {
 .score-container .best-score::before {
     content: "Best score:";
     font-size: 1.2rem;
-    color: white;
+    color: var(--text-secondary);
     opacity: 0.8;
     display: flex;
     align-items: center;
@@ -574,7 +619,7 @@ li.letter {
     z-index: 200;
     height: 100vh;
     width: 100vw;
-    background-color: rgba(17, 3, 32, 0.8);
+    background-color: var(--modal-overlay);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -601,7 +646,7 @@ li.letter {
     height: 50%;
     width: 40%;
     border-radius: 20px;
-    background-color: var(--dark-main-color);
+    background-color: var(--bg-primary);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -744,13 +789,14 @@ li.letter {
     display: flex;
     justify-content: center;
     align-items: center;
-    color: white;
+    color: var(--text-primary);
     user-select: none;
 }
 
 .list li:hover {
     background-color: var(--main-button-color);
     box-shadow: 0 0 25px -3px var(--main-button-color);
+    color: white;
 }
 
 .difficulty-button {
@@ -785,7 +831,7 @@ li.letter {
     top: 0;
     height: 100vh;
     width: 100%;
-    background: rgba(17, 3, 32, 0.4);
+    background: var(--modal-overlay);
     z-index: 100;
 }
 
@@ -794,8 +840,8 @@ li.letter {
     width: 28%;
     min-width: 450px;
     padding: 50px;
-    background: var(--dark-main-color);
-    color: white;
+    background: var(--bg-primary);
+    color: var(--text-primary);
     border-radius: 20px;
     box-shadow: 0 5px 30px rgba(0, 0, 0, 0.4);
     display: flex;
@@ -970,7 +1016,7 @@ li.letter {
 }
 
 /* ============================================
-   STATS CONTAINER - Top Left Display
+   STATS CONTAINER
    ============================================ */
 
 .stats-container {
@@ -982,16 +1028,16 @@ li.letter {
     flex-direction: column;
     gap: 2px;
     font-size: 0.8rem;
-    color: white;
+    color: var(--text-primary);
     opacity: 0.8;
     pointer-events: none;
     font-family: 'Balsamiq Sans', sans-serif;
     text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
-    background: rgba(17, 3, 32, 0.4);
+    background: var(--stats-bg);
     padding: 8px 12px;
     border-radius: 10px;
     backdrop-filter: blur(5px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--border-color);
 }
 
 .stats-container div {
@@ -1001,7 +1047,7 @@ li.letter {
 }
 
 /* ============================================
-   STREAK BONUS NOTIFICATION ANIMATION
+   STREAK BONUS NOTIFICATION
    ============================================ */
 
 @keyframes streakPop {
@@ -1028,7 +1074,183 @@ li.letter {
 }
 
 /* ============================================
-   RESPONSIVE STATS
+   SHAKE ANIMATION
+   ============================================ */
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+    20%, 40%, 60%, 80% { transform: translateX(10px); }
+}
+
+button.letter.shake {
+    animation: shake 0.5s ease-in-out;
+}
+
+/* ============================================
+   TUTORIAL OVERLAY
+   ============================================ */
+
+.tutorial-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    padding: 30px;
+    text-align: center;
+}
+
+.tutorial-overlay h2 {
+    font-family: "Luckiest Guy", sans-serif;
+    font-size: 2.5rem;
+    color: var(--second-button-color);
+    margin-bottom: 30px;
+}
+
+.tutorial-overlay p {
+    font-size: 1.2rem;
+    margin: 8px 0;
+    opacity: 0.9;
+}
+
+.tutorial-overlay .tutorial-icon {
+    font-size: 2rem;
+    margin-right: 10px;
+}
+
+.tutorial-overlay .tutorial-step {
+    display: flex;
+    align-items: center;
+    margin: 10px 0;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 12px 20px;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 400px;
+    border-left: 3px solid var(--second-button-color);
+}
+
+.tutorial-overlay .tutorial-got-it {
+    margin-top: 30px;
+    padding: 15px 50px;
+    font-size: 1.2rem;
+    background: var(--second-button-color);
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: bold;
+    color: var(--dark-main-color);
+    transition: transform 0.2s;
+}
+
+.tutorial-overlay .tutorial-got-it:hover {
+    transform: scale(1.05);
+}
+
+.tutorial-overlay .tutorial-sub {
+    font-size: 0.9rem;
+    opacity: 0.5;
+    margin-top: 20px;
+}
+
+/* ============================================
+   THEME-SPECIFIC STYLES
+   ============================================ */
+
+[data-theme="light"] .hill-right img,
+[data-theme="light"] .hill-left img,
+[data-theme="light"] .hill-middle img,
+[data-theme="light"] .city img,
+[data-theme="light"] .mountains img {
+    filter: var(--filter-brightness);
+}
+
+[data-theme="light"] .bg-container {
+    filter: brightness(1.1);
+}
+
+[data-theme="light"] .cover {
+    box-shadow: inset 0 -15px 10px -8px var(--cover-shadow),
+                inset 0 15px 15px -10px var(--cover-highlight);
+}
+
+[data-theme="light"] footer {
+    background-image: linear-gradient(
+        to top,
+        var(--bg-footer) 50%,
+        var(--bg-footer) 65%,
+        rgba(200, 220, 240, 0.7) 85%,
+        rgba(200, 220, 240, 0.4) 95%,
+        rgba(200, 220, 240, 0) 100%
+    );
+}
+
+[data-theme="light"] .stats-container {
+    background: rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(26, 26, 46, 0.15);
+    backdrop-filter: blur(5px);
+    color: var(--text-primary);
+}
+
+[data-theme="light"] li.letter {
+    background-color: rgba(255, 255, 255, 0.4);
+    box-shadow: inset 0 0px 10px -2px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .nav-bar {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="light"] .category span {
+    color: var(--text-primary);
+    opacity: 0.9;
+}
+
+[data-theme="light"] .category span:nth-child(2) {
+    opacity: 0.6;
+}
+
+[data-theme="light"] .score-container .guesses-left::before,
+[data-theme="light"] .score-container .score::before,
+[data-theme="light"] .score-container .best-score::before {
+    color: var(--text-secondary);
+}
+
+[data-theme="light"] .modal {
+    background-color: var(--modal-overlay);
+}
+
+[data-theme="light"] .gameover-modal {
+    background: var(--modal-overlay);
+}
+
+[data-theme="light"] .gameover-content {
+    border: 2px solid rgba(82, 12, 161, 0.2);
+}
+
+[data-theme="light"] .list {
+    background-color: rgb(200, 215, 230);
+}
+
+[data-theme="light"] .list li {
+    color: var(--text-primary);
+}
+
+[data-theme="light"] .list li:hover {
+    background-color: var(--main-button-color);
+    color: white;
+}
+
+/* ============================================
+   RESPONSIVE STYLES
    ============================================ */
 
 @media screen and (max-width: 480px) {
@@ -1039,6 +1261,16 @@ li.letter {
         left: 5px;
         gap: 1px;
     }
+    .tutorial-overlay h2 {
+        font-size: 1.8rem;
+    }
+    .tutorial-overlay .tutorial-step {
+        padding: 10px 15px;
+        max-width: 100%;
+    }
+    .tutorial-overlay p {
+        font-size: 1rem;
+    }
 }
 
 @media screen and (orientation: landscape) and (max-height: 500px) {
@@ -1048,6 +1280,20 @@ li.letter {
         top: 5px;
         left: 5px;
         gap: 1px;
+    }
+    .tutorial-overlay h2 {
+        font-size: 1.5rem;
+        margin-bottom: 15px;
+    }
+    .tutorial-overlay .tutorial-step {
+        padding: 6px 12px;
+        margin: 5px 0;
+        max-width: 100%;
+    }
+    .tutorial-overlay .tutorial-got-it {
+        margin-top: 15px;
+        padding: 10px 30px;
+        font-size: 1rem;
     }
 }
 
@@ -1464,6 +1710,19 @@ li.letter {
         left: 4px;
         gap: 1px;
     }
+    .tutorial-overlay h2 {
+        font-size: 1.3rem;
+        margin-bottom: 10px;
+    }
+    .tutorial-overlay .tutorial-step {
+        padding: 4px 10px;
+        margin: 3px 0;
+    }
+    .tutorial-overlay .tutorial-got-it {
+        margin-top: 10px;
+        padding: 8px 25px;
+        font-size: 0.9rem;
+    }
 }
 
 /* Phone Portrait */
@@ -1657,7 +1916,7 @@ li.letter {
         margin-right: 10px;
     }
     .modal {
-        background-color: rgba(17, 3, 32, 0.7);
+        background-color: var(--modal-overlay);
     }
     .modal-content {
         height: 70%;
@@ -1712,5 +1971,21 @@ li.letter {
         left: 4px;
         gap: 1px;
         border-radius: 6px;
+    }
+    .tutorial-overlay h2 {
+        font-size: 1.5rem;
+        margin-bottom: 15px;
+    }
+    .tutorial-overlay .tutorial-step {
+        padding: 8px 12px;
+        margin: 5px 0;
+    }
+    .tutorial-overlay p {
+        font-size: 0.95rem;
+    }
+    .tutorial-overlay .tutorial-got-it {
+        margin-top: 20px;
+        padding: 12px 35px;
+        font-size: 1rem;
     }
 }
