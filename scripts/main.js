@@ -6,17 +6,12 @@ let adInitialized = false;
 let interstitialReady = false;
 let winCounter = 0;
 let adsEnabled = true;
-let adInProgress = false; // Prevent multiple ad triggers
+let adInProgress = false;
 
 // YOUR REAL AD UNIT IDs FROM ADMOB CONSOLE
 const BANNER_AD_ID = 'ca-app-pub-5834184703937435/4096610957';
 const INTERSTITIAL_AD_ID = 'ca-app-pub-5834184703937435/8224547901';
-const REWARDED_AD_ID = 'ca-app-pub-5834184703937435/1383839206'; // Test ID - replace with your rewarded ad ID
-
-// DEMO AD UNITS FOR TESTING (uncomment to test without approval)
-// const BANNER_AD_ID = 'ca-app-pub-3940256099942544/6300978111';
-// const INTERSTITIAL_AD_ID = 'ca-app-pub-3940256099942544/1033173711';
-// const REWARDED_AD_ID = 'ca-app-pub-3940256099942544/5224357317';
+const REWARDED_AD_ID = 'ca-app-pub-5834184703937435/1383839206'; // Replace with your real rewarded ad ID
 
 function initializeAds() {
     if (adInitialized) return;
@@ -95,7 +90,6 @@ function prepareRewardedAd() {
         
         AdMob.on('admob.rewarded.events.CLOSE', () => {
             rewardedAdReady = false;
-            // Prepare next rewarded ad
             prepareRewardedAd();
         });
     } catch (error) {
@@ -105,8 +99,6 @@ function prepareRewardedAd() {
 
 function showRewardedAd(callback, type) {
     if (!adsEnabled || typeof AdMob === 'undefined') {
-        // Fallback: give reward without ad (for testing)
-        console.log('Ad not available - giving reward for testing');
         if (callback) callback();
         return;
     }
@@ -119,7 +111,6 @@ function showRewardedAd(callback, type) {
     if (!rewardedAdReady) {
         console.log('Rewarded ad not ready, preparing...');
         prepareRewardedAd();
-        // Fallback: still reward after a delay for testing
         setTimeout(() => {
             if (callback) callback();
         }, 1000);
@@ -135,12 +126,10 @@ function showRewardedAd(callback, type) {
     } catch (error) {
         console.log('Failed to show rewarded ad:', error);
         adInProgress = false;
-        // Fallback reward
         if (callback) callback();
     }
 }
 
-// Prepare rewarded ad on load
 setTimeout(prepareRewardedAd, 2000);
 
 function showInterstitialAd() {
@@ -161,7 +150,66 @@ function showInterstitialAd() {
 setTimeout(initializeAds, 1500);
 
 // ============================================
-// DAILY STREAK SYSTEM (Duolingo-style)
+// THEME TOGGLE
+// ============================================
+
+const loadTheme = () => {
+    const savedTheme = localStorage.getItem('gallowspeak_theme');
+    if (savedTheme) {
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        updateThemeIcon(savedTheme);
+    } else {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        updateThemeIcon('dark');
+    }
+};
+
+const updateThemeIcon = (theme) => {
+    const icon = document.getElementById('theme-icon');
+    if (icon) {
+        icon.textContent = theme === 'light' ? '☀️' : '🌙';
+    }
+};
+
+const toggleTheme = () => {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('gallowspeak_theme', newTheme);
+    updateThemeIcon(newTheme);
+    
+    // Apply theme changes to parallax background layers
+    const bgContainer = document.querySelector('.bg-container');
+    if (bgContainer) {
+        if (newTheme === 'light') {
+            bgContainer.style.filter = 'brightness(1.1) saturate(1.1)';
+        } else {
+            bgContainer.style.filter = 'none';
+        }
+    }
+};
+
+// Load theme on startup
+loadTheme();
+
+// Add event listener when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+    const toggleBtn = document.getElementById('themeToggle');
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', toggleTheme);
+    }
+});
+
+// Also add listener if DOM already loaded
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    const toggleBtn = document.getElementById('themeToggle');
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', toggleTheme);
+    }
+}
+
+// ============================================
+// DAILY STREAK SYSTEM
 // ============================================
 
 let streakData = {
@@ -297,7 +345,6 @@ let gameStats = {
     totalWordsCleared: 0
 };
 
-// Track the current word being guessed for showing correct answer
 let currentCorrectWord = '';
 
 const loadGameStats = () => {
@@ -381,16 +428,11 @@ const showLevelComplete = () => {
     const data = modal.querySelector('.gameover-data');
     const buttons = modal.querySelector('.buttons');
     
-    // Clear existing buttons
     buttons.innerHTML = '';
+    levelCoinsEarned = 30;
     
-    // Store earned coins for this level
-    levelCoinsEarned = 30; // Base level bonus
-    
-    // Update modal content
     title.textContent = '🎉 LEVEL CLEAR!';
     
-    // Update data section
     data.innerHTML = `
         <div class="level-info" style="text-align: center; width: 100%;">
             <div style="font-size: 1.8rem; color: var(--second-button-color); font-weight: bold;">
@@ -407,7 +449,6 @@ const showLevelComplete = () => {
         </div>
     `;
     
-    // Create buttons
     buttons.style.width = '90%';
     buttons.style.display = 'flex';
     buttons.style.flexDirection = 'row';
@@ -415,7 +456,7 @@ const showLevelComplete = () => {
     buttons.style.gap = '10px';
     buttons.style.marginTop = '15px';
     
-    // Button 1: Menu (always present)
+    // Button 1: Menu
     const menuBtn = document.createElement('button');
     menuBtn.className = 'menu-button';
     menuBtn.style.cssText = `
@@ -436,7 +477,7 @@ const showLevelComplete = () => {
         showMenu();
     });
     
-    // Button 2: Next Level (with coins)
+    // Button 2: Next Level
     const nextBtn = document.createElement('button');
     nextBtn.className = 'menu-button';
     nextBtn.style.cssText = `
@@ -457,12 +498,11 @@ const showLevelComplete = () => {
     `;
     nextBtn.innerHTML = `▶ Next  +🪙${levelCoinsEarned}`;
     nextBtn.addEventListener('click', () => {
-        // Coins already added in onWordCleared
         closeLevelPopup();
         continueToNextLevel();
     });
     
-    // Button 3: Double Coins (rewarded ad)
+    // Button 3: Double Coins
     const doubleBtn = document.createElement('button');
     doubleBtn.className = 'menu-button';
     doubleBtn.style.cssText = `
@@ -486,7 +526,6 @@ const showLevelComplete = () => {
         doubleBtn.disabled = true;
         doubleBtn.textContent = '⏳ Loading...';
         showRewardedAd(() => {
-            // Double the coins
             const doubledCoins = levelCoinsEarned;
             gameStats.totalCoins += doubledCoins;
             saveGameStats();
@@ -495,9 +534,7 @@ const showLevelComplete = () => {
             doubleBtn.textContent = `✅ +${doubledCoins} 🪙`;
             doubleBtn.style.background = '#37b666';
             doubleBtn.style.color = 'white';
-            // Update the next button text
             nextBtn.innerHTML = `▶ Next  +🪙${levelCoinsEarned}`;
-            // Update data display
             const coinDisplay = data.querySelector('.level-info div:first-child');
             if (coinDisplay) {
                 coinDisplay.innerHTML = `🪙 +${levelCoinsEarned} coins!`;
@@ -511,7 +548,6 @@ const showLevelComplete = () => {
     buttons.appendChild(nextBtn);
     buttons.appendChild(doubleBtn);
     
-    // Show the modal with animation
     modal.style.visibility = 'visible';
     modal.style.opacity = '0';
     box.style.transform = 'scale(0.8)';
@@ -532,13 +568,10 @@ const showLevelFailed = (correctWord) => {
     const data = modal.querySelector('.gameover-data');
     const buttons = modal.querySelector('.buttons');
     
-    // Clear existing buttons
     buttons.innerHTML = '';
     
-    // Update modal content
     title.textContent = '😢 LEVEL FAILED';
     
-    // Update data section
     data.innerHTML = `
         <div class="level-info" style="text-align: center; width: 100%;">
             <div style="font-size: 1.5rem; color: #ff6b6b; font-weight: bold; margin-bottom: 10px;">
@@ -557,7 +590,6 @@ const showLevelFailed = (correctWord) => {
         </div>
     `;
     
-    // Create buttons
     buttons.style.width = '90%';
     buttons.style.display = 'flex';
     buttons.style.flexDirection = 'row';
@@ -565,7 +597,7 @@ const showLevelFailed = (correctWord) => {
     buttons.style.gap = '10px';
     buttons.style.marginTop = '15px';
     
-    // Button 1: Menu (always present)
+    // Button 1: Menu
     const menuBtn = document.createElement('button');
     menuBtn.className = 'menu-button';
     menuBtn.style.cssText = `
@@ -586,7 +618,7 @@ const showLevelFailed = (correctWord) => {
         showMenu();
     });
     
-    // Button 2: Try Again (watch 15s ad)
+    // Button 2: Try Again
     const retryBtn = document.createElement('button');
     retryBtn.className = 'menu-button';
     retryBtn.style.cssText = `
@@ -610,7 +642,6 @@ const showLevelFailed = (correctWord) => {
         retryBtn.disabled = true;
         retryBtn.textContent = '⏳ Loading...';
         showRewardedAd(() => {
-            // Retry the level - reset with same word
             closeLevelPopup();
             resetCurrentLevel();
             retryBtn.disabled = false;
@@ -621,7 +652,6 @@ const showLevelFailed = (correctWord) => {
     buttons.appendChild(menuBtn);
     buttons.appendChild(retryBtn);
     
-    // Show the modal with animation
     modal.style.visibility = 'visible';
     modal.style.opacity = '0';
     box.style.transform = 'scale(0.8)';
@@ -650,7 +680,6 @@ const closeLevelPopup = () => {
 };
 
 const continueToNextLevel = () => {
-    // Reset game for next level
     words.length = 0;
     const savedData = sessionStorage.getItem('currentData');
     if (savedData) {
@@ -664,12 +693,10 @@ const continueToNextLevel = () => {
 };
 
 const resetCurrentLevel = () => {
-    // Reset the current word array
     const word = currentCorrectWord;
     if (word) {
         wordArray = word.toUpperCase().split('');
         hidden = {};
-        // Reset word container
         clearPrevWord(true);
         hideLetters(wordArray);
         createLetterElements(wordArray);
@@ -677,7 +704,6 @@ const resetCurrentLevel = () => {
         enableAllButtons();
         updateStatsUI();
     } else {
-        // Fallback: get a new word
         setupGame();
         hideLetters(wordArray);
         createLetterElements(wordArray);
@@ -685,13 +711,57 @@ const resetCurrentLevel = () => {
     }
 };
 
-// Show cluster complete popup
 const showClusterComplete = () => {
     showStreakBonus(`💎 Cluster Complete! +10 Diamonds! 💎`);
 };
 
 // ============================================
-// ORIGINAL GAME CODE (Modified)
+// TUTORIAL OVERLAY
+// ============================================
+
+const showTutorial = () => {
+    if (localStorage.getItem('tutorial_shown')) return;
+    
+    const overlay = document.createElement('div');
+    overlay.className = 'tutorial-overlay';
+    overlay.id = 'tutorial-overlay';
+    
+    overlay.innerHTML = `
+        <h2>🎯 How to Play</h2>
+        <div class="tutorial-step">
+            <span class="tutorial-icon">🔤</span>
+            <span>Guess letters to complete the hidden word</span>
+        </div>
+        <div class="tutorial-step">
+            <span class="tutorial-icon">🏆</span>
+            <span>Complete <strong>3 words</strong> to clear a level</span>
+        </div>
+        <div class="tutorial-step">
+            <span class="tutorial-icon">🪙</span>
+            <span>Earn coins & diamonds for your progress</span>
+        </div>
+        <div class="tutorial-step">
+            <span class="tutorial-icon">🔥</span>
+            <span>Play daily to maintain your streak!</span>
+        </div>
+        <button class="tutorial-got-it" id="tutorial-got-it">Got it! 🚀</button>
+        <div class="tutorial-sub">💡 You can replay this tutorial anytime from settings</div>
+    `;
+    
+    document.body.appendChild(overlay);
+    
+    document.getElementById('tutorial-got-it').addEventListener('click', () => {
+        overlay.style.transition = 'opacity 0.3s';
+        overlay.style.opacity = '0';
+        setTimeout(() => {
+            overlay.remove();
+        }, 300);
+        localStorage.setItem('tutorial_shown', 'true');
+    });
+};
+
+// ============================================
+// ORIGINAL GAME CODE
 // ============================================
 
 const scene = document.querySelector("#scene");
@@ -954,7 +1024,7 @@ const CreateNextButton = () => {
     wordContainer.append(nextButton);
 };
 
-// MODIFIED: checkAnswer with level system integration and game over handling
+// MODIFIED: checkAnswer with level system, shake animation, and game over handling
 const checkAnswer = (value) => {
     let keys = Object.keys(hidden).filter((k) => hidden[k] === value);
     if (keys.length !== 0) {
@@ -982,16 +1052,13 @@ const checkAnswer = (value) => {
                 if (allowAudio && winAudio && winAudio.play) winAudio.play();
                 updateCurrent();
                 
-                // === Level System Integration ===
                 const levelCompleted = onWordCleared();
                 
                 if (levelCompleted) {
-                    // Level complete - show level popup
                     disableAllButtons();
                     return;
                 }
                 
-                // Show interstitial ad after every 3 wins (if not level complete)
                 showInterstitialAd();
                 
                 if (mobileAndTabletCheck()) {
@@ -1008,6 +1075,9 @@ const checkAnswer = (value) => {
         let button = document.getElementById(`letter-${value}`);
         if (button) {
             button.style.border = "1px solid red";
+            // ADD SHAKE ANIMATION
+            button.classList.add('shake');
+            setTimeout(() => button.classList.remove('shake'), 500);
         }
         if (allowAudio && wrongAudio && wrongAudio.play) {
             wrongAudio.volume = 0.2;
@@ -1024,12 +1094,10 @@ const checkAnswer = (value) => {
                 loseAudio.play();
             }
             
-            // Store the correct word before showing popup
             const correctWord = currentCorrectWord;
             currentCorrectWord = '';
             
             setTimeout(() => {
-                // Show level failed popup with correct word
                 showLevelFailed(correctWord);
             }, 1000);
         }
@@ -1053,6 +1121,7 @@ const clearPrevWord = (all) => {
         button.style.border = "none";
         button.style.opacity = "1";
         button.style.transform = "scale(1)";
+        button.classList.remove('shake');
     });
     if (all && wordContainer.firstChild) {
         while (wordContainer.firstChild) {
@@ -1239,6 +1308,7 @@ const startGame = () => {
         button.style.opacity = "1";
         button.style.border = "none";
         button.style.transform = "scale(1)";
+        button.classList.remove('shake');
     });
     updateStreak();
 };
@@ -1309,6 +1379,10 @@ let playButton = document.querySelector(".start-game");
 loadSavedBestScore();
 loadGameStats();
 updateStatsUI();
+loadTheme();
+
+// Show tutorial on first launch
+setTimeout(showTutorial, 500);
 
 document.querySelector(".start-game").addEventListener("click", () => {
     catButton.disabled = true;
