@@ -353,7 +353,7 @@ const showLandingPage = () => {
     
     console.log('Landing page HTML injected, attaching event listeners...');
     
-    // ATTACH EVENT LISTENERS - THIS IS THE KEY FIX
+    // ATTACH EVENT LISTENERS
     const playBtn = document.getElementById('landingPlayBtn');
     const settingsBtn = document.getElementById('landingSettingsBtn');
     const avatarBtn = document.getElementById('landingChangeAvatar');
@@ -362,16 +362,18 @@ const showLandingPage = () => {
         console.log('Play button found, attaching listener');
         playBtn.addEventListener('click', function(e) {
             e.stopPropagation();
-            console.log('Play button clicked!');
+            console.log('Play button clicked! - Hiding landing and showing menu');
             const overlay = document.getElementById('landingOverlay');
             if (overlay) {
-                overlay.style.transition = 'opacity 0.5s, transform 0.5s';
+                overlay.style.transition = 'opacity 0.3s';
                 overlay.style.opacity = '0';
-                overlay.style.transform = 'scale(1.1)';
                 setTimeout(function() {
                     overlay.style.display = 'none';
+                    // SHOW MENU DIRECTLY
                     showMenu();
-                }, 500);
+                    // Check if tutorial should show
+                    checkAndShowTutorial();
+                }, 300);
             }
         });
     } else {
@@ -411,6 +413,59 @@ const showLandingPage = () => {
     }
     
     console.log('Landing page setup complete');
+};
+
+// ============================================
+// TUTORIAL - Shows ONLY ONCE
+// ============================================
+
+const checkAndShowTutorial = () => {
+    // Check if tutorial has already been shown
+    if (localStorage.getItem('tutorial_shown') === 'true') {
+        console.log('Tutorial already shown, skipping...');
+        return;
+    }
+    
+    console.log('Showing tutorial for first time...');
+    
+    const overlay = document.createElement('div');
+    overlay.className = 'tutorial-overlay';
+    overlay.id = 'tutorial-overlay';
+    
+    overlay.innerHTML = `
+        <h2>🎯 How to Play</h2>
+        <div class="tutorial-step">
+            <span class="tutorial-icon">🔤</span>
+            <span>Guess letters to complete the hidden word</span>
+        </div>
+        <div class="tutorial-step">
+            <span class="tutorial-icon">🏆</span>
+            <span>Complete <strong>3 words</strong> to clear a level</span>
+        </div>
+        <div class="tutorial-step">
+            <span class="tutorial-icon">🪙</span>
+            <span>Earn coins & diamonds for your progress</span>
+        </div>
+        <div class="tutorial-step">
+            <span class="tutorial-icon">🔥</span>
+            <span>Play daily to maintain your streak!</span>
+        </div>
+        <button class="tutorial-got-it" id="tutorial-got-it">Got it! 🚀</button>
+        <div class="tutorial-sub">💡 You can change your avatar in Settings</div>
+    `;
+    
+    document.body.appendChild(overlay);
+    
+    document.getElementById('tutorial-got-it').addEventListener('click', function() {
+        overlay.style.transition = 'opacity 0.3s';
+        overlay.style.opacity = '0';
+        setTimeout(function() {
+            overlay.remove();
+        }, 300);
+        // Mark tutorial as shown
+        localStorage.setItem('tutorial_shown', 'true');
+        console.log('Tutorial completed and marked as shown');
+    });
 };
 
 // ============================================
@@ -914,51 +969,6 @@ const showClusterComplete = () => {
 };
 
 // ============================================
-// TUTORIAL OVERLAY
-// ============================================
-
-const showTutorial = () => {
-    if (localStorage.getItem('tutorial_shown')) return;
-    
-    const overlay = document.createElement('div');
-    overlay.className = 'tutorial-overlay';
-    overlay.id = 'tutorial-overlay';
-    
-    overlay.innerHTML = `
-        <h2>🎯 How to Play</h2>
-        <div class="tutorial-step">
-            <span class="tutorial-icon">🔤</span>
-            <span>Guess letters to complete the hidden word</span>
-        </div>
-        <div class="tutorial-step">
-            <span class="tutorial-icon">🏆</span>
-            <span>Complete <strong>3 words</strong> to clear a level</span>
-        </div>
-        <div class="tutorial-step">
-            <span class="tutorial-icon">🪙</span>
-            <span>Earn coins & diamonds for your progress</span>
-        </div>
-        <div class="tutorial-step">
-            <span class="tutorial-icon">🔥</span>
-            <span>Play daily to maintain your streak!</span>
-        </div>
-        <button class="tutorial-got-it" id="tutorial-got-it">Got it! 🚀</button>
-        <div class="tutorial-sub">💡 You can change your avatar in Settings</div>
-    `;
-    
-    document.body.appendChild(overlay);
-    
-    document.getElementById('tutorial-got-it').addEventListener('click', () => {
-        overlay.style.transition = 'opacity 0.3s';
-        overlay.style.opacity = '0';
-        setTimeout(() => {
-            overlay.remove();
-        }, 300);
-        localStorage.setItem('tutorial_shown', 'true');
-    });
-};
-
-// ============================================
 // ORIGINAL GAME CODE
 // ============================================
 
@@ -1413,18 +1423,23 @@ const animateScene = () => {
 };
 
 const showMenu = () => {
-    // Hide landing page when menu opens
+    console.log('Showing menu...');
+    
+    // Hide landing page
     const landingOverlay = document.getElementById('landingOverlay');
     if (landingOverlay) {
         landingOverlay.style.display = 'none';
     }
     
+    // Show the modal
     modal.style.visibility = "visible";
     modal.style.opacity = 1;
     menuBox.classList.toggle("expand");
     menuBox.classList.toggle("drop-down");
     mainContent.classList.toggle("blur-out");
     mainContent.classList.toggle("blur-in");
+    
+    console.log('Menu should be visible now');
 };
 
 const closeMenu = () => {
@@ -1705,12 +1720,6 @@ setTimeout(function() {
     console.log('Showing landing page...');
     showLandingPage();
 }, 300);
-
-// Show tutorial after landing
-setTimeout(function() {
-    console.log('Showing tutorial...');
-    showTutorial();
-}, 1500);
 
 // ============================================
 // MENU BUTTONS
