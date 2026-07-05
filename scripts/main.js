@@ -183,7 +183,7 @@ const changeAvatar = () => {
 const updateAvatarUI = () => {
     const avatarElements = document.querySelectorAll('.avatar-display');
     avatarElements.forEach(el => {
-        el.textContent = userAvatar;
+        if (el) el.textContent = userAvatar;
     });
 };
 
@@ -211,7 +211,6 @@ const updateThemeIcon = (theme) => {
     if (toggleBtn) {
         toggleBtn.innerHTML = `<span id="theme-icon">${theme === 'light' ? '☀️' : '🌙'}</span> Theme`;
     }
-    // Update settings theme status if open
     if (settingsOpen) {
         updateSettingsUI();
     }
@@ -242,7 +241,10 @@ let settingsOpen = false;
 
 const openSettings = () => {
     const modal = document.getElementById('settingsModal');
-    if (!modal) return;
+    if (!modal) {
+        console.warn('Settings modal not found in DOM');
+        return;
+    }
     
     updateSettingsUI();
     modal.classList.add('active');
@@ -300,8 +302,13 @@ const updateSettingsUI = () => {
 // ============================================
 
 const showLandingPage = () => {
+    console.log('Showing landing page...');
+    
+    // Remove any existing landing overlay
     const existing = document.getElementById('landingOverlay');
-    if (existing) return;
+    if (existing) {
+        existing.remove();
+    }
     
     const overlay = document.createElement('div');
     overlay.className = 'landing-overlay';
@@ -328,7 +335,7 @@ const showLandingPage = () => {
             <div class="landing-title">GallowsPeak</div>
             <div class="landing-subtitle">🗡️ Guess the Word • Clear the Level</div>
             <div class="landing-avatar-container">
-                <div class="landing-avatar avatar-display" id="landingAvatar">🦊</div>
+                <div class="landing-avatar avatar-display" id="landingAvatar">${userAvatar}</div>
                 <button class="landing-change-avatar" id="landingChangeAvatar">🔄</button>
             </div>
             <button class="landing-play-btn" id="landingPlayBtn">▶ Play</button>
@@ -341,36 +348,69 @@ const showLandingPage = () => {
             <div class="landing-version">v1.0.0</div>
         </div>
     `;
+    
     document.body.prepend(overlay);
     
-    // Update avatar
-    updateAvatarUI();
+    console.log('Landing page HTML injected, attaching event listeners...');
     
-    // Event Listeners
-    document.getElementById('landingChangeAvatar').addEventListener('click', (e) => {
-        e.stopPropagation();
-        changeAvatar();
-        const avatarDisplay = document.querySelector('.landing-avatar');
-        if (avatarDisplay) avatarDisplay.textContent = userAvatar;
-    });
+    // ATTACH EVENT LISTENERS - THIS IS THE KEY FIX
+    const playBtn = document.getElementById('landingPlayBtn');
+    const settingsBtn = document.getElementById('landingSettingsBtn');
+    const avatarBtn = document.getElementById('landingChangeAvatar');
     
-    document.getElementById('landingPlayBtn').addEventListener('click', () => {
-        const overlay = document.getElementById('landingOverlay');
-        if (overlay) {
-            overlay.style.transition = 'opacity 0.5s, transform 0.5s';
-            overlay.style.opacity = '0';
-            overlay.style.transform = 'scale(1.1)';
-            setTimeout(() => {
-                overlay.remove();
-                showMenu();
-            }, 500);
-        }
-    });
+    if (playBtn) {
+        console.log('Play button found, attaching listener');
+        playBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            console.log('Play button clicked!');
+            const overlay = document.getElementById('landingOverlay');
+            if (overlay) {
+                overlay.style.transition = 'opacity 0.5s, transform 0.5s';
+                overlay.style.opacity = '0';
+                overlay.style.transform = 'scale(1.1)';
+                setTimeout(function() {
+                    overlay.style.display = 'none';
+                    showMenu();
+                }, 500);
+            }
+        });
+    } else {
+        console.error('Play button not found!');
+    }
     
-    document.getElementById('landingSettingsBtn').addEventListener('click', (e) => {
-        e.stopPropagation();
-        openSettings();
-    });
+    if (settingsBtn) {
+        console.log('Settings button found, attaching listener');
+        settingsBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            console.log('Settings button clicked!');
+            openSettings();
+        });
+    } else {
+        console.error('Settings button not found!');
+    }
+    
+    if (avatarBtn) {
+        console.log('Avatar button found, attaching listener');
+        avatarBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            console.log('Avatar button clicked!');
+            changeAvatar();
+            const avatarDisplay = document.querySelector('.landing-avatar');
+            if (avatarDisplay) {
+                avatarDisplay.textContent = userAvatar;
+            }
+        });
+    } else {
+        console.error('Avatar button not found!');
+    }
+    
+    // Update avatar display
+    const avatarDisplay = document.querySelector('.landing-avatar');
+    if (avatarDisplay) {
+        avatarDisplay.textContent = userAvatar;
+    }
+    
+    console.log('Landing page setup complete');
 };
 
 // ============================================
@@ -584,6 +624,8 @@ let isLevelFailed = false;
 
 const showLevelComplete = () => {
     const modal = document.querySelector('.gameover-modal');
+    if (!modal) return;
+    
     const box = modal.querySelector('.gameover-box');
     const content = modal.querySelector('.gameover-content');
     const title = modal.querySelector('.text');
@@ -720,6 +762,8 @@ const showLevelComplete = () => {
 
 const showLevelFailed = (correctWord) => {
     const modal = document.querySelector('.gameover-modal');
+    if (!modal) return;
+    
     const box = modal.querySelector('.gameover-box');
     const content = modal.querySelector('.gameover-content');
     const title = modal.querySelector('.text');
@@ -1537,7 +1581,9 @@ let playButton = document.querySelector(".start-game");
 // SETTINGS EVENT LISTENERS
 // ============================================
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM fully loaded, attaching settings listeners...');
+    
     // Settings close button
     const closeBtn = document.getElementById('settingsClose');
     if (closeBtn) {
@@ -1547,7 +1593,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Click outside to close
     const modal = document.getElementById('settingsModal');
     if (modal) {
-        modal.addEventListener('click', (e) => {
+        modal.addEventListener('click', function(e) {
             if (e.target === modal) {
                 closeSettings();
             }
@@ -1557,7 +1603,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Avatar change in settings
     const avatarChangeBtn = document.getElementById('settingsChangeAvatar');
     if (avatarChangeBtn) {
-        avatarChangeBtn.addEventListener('click', () => {
+        avatarChangeBtn.addEventListener('click', function() {
             changeAvatar();
             updateSettingsUI();
             const landingAvatar = document.querySelector('.landing-avatar');
@@ -1568,7 +1614,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Sound toggle in settings
     const soundToggle = document.getElementById('settingsSoundToggle');
     if (soundToggle) {
-        soundToggle.addEventListener('click', () => {
+        soundToggle.addEventListener('click', function() {
             allowAudio = !allowAudio;
             const soundBtn = document.querySelector('.sound-button');
             if (soundBtn) {
@@ -1581,7 +1627,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Theme toggle in settings
     const themeToggle = document.getElementById('settingsThemeToggle');
     if (themeToggle) {
-        themeToggle.addEventListener('click', () => {
+        themeToggle.addEventListener('click', function() {
             toggleTheme();
             updateSettingsUI();
         });
@@ -1590,7 +1636,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Reset progress
     const resetBtn = document.getElementById('settingsReset');
     if (resetBtn) {
-        resetBtn.addEventListener('click', () => {
+        resetBtn.addEventListener('click', function() {
             if (confirm('⚠️ Are you sure? This will reset ALL your progress, coins, diamonds, and streak!')) {
                 localStorage.removeItem('gallowspeak_streak_data');
                 localStorage.removeItem('gallowspeak_game_stats');
@@ -1635,7 +1681,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Escape key to close settings
-document.addEventListener('keydown', (e) => {
+document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape' && settingsOpen) {
         closeSettings();
     }
@@ -1645,6 +1691,8 @@ document.addEventListener('keydown', (e) => {
 // INITIALIZATION
 // ============================================
 
+console.log('Initializing game...');
+
 loadSavedBestScore();
 loadAvatar();
 loadTheme();
@@ -1652,17 +1700,23 @@ loadGameStats();
 loadStreakData();
 updateStatsUI();
 
-// Show landing page first
-setTimeout(showLandingPage, 500);
+// Show landing page after a short delay
+setTimeout(function() {
+    console.log('Showing landing page...');
+    showLandingPage();
+}, 300);
 
 // Show tutorial after landing
-setTimeout(showTutorial, 1500);
+setTimeout(function() {
+    console.log('Showing tutorial...');
+    showTutorial();
+}, 1500);
 
 // ============================================
 // MENU BUTTONS
 // ============================================
 
-document.querySelector(".start-game").addEventListener("click", () => {
+document.querySelector(".start-game").addEventListener("click", function() {
     catButton.disabled = true;
     diffButton.disabled = true;
     playButton.disabled = true;
@@ -1672,13 +1726,13 @@ document.querySelector(".start-game").addEventListener("click", () => {
         queryParam = category;
         let endpoint = `${wordUrl}${queryParam}`;
         if (category === "pokemons") {
-            fetchData(pokeUrl).then((jsonResponse) => {
+            fetchData(pokeUrl).then(function(jsonResponse) {
                 playButton.classList.toggle("loading");
                 fillData(jsonResponse, "pokemons");
                 startGame();
             });
         } else {
-            fetchData(endpoint).then((jsonResponse) => {
+            fetchData(endpoint).then(function(jsonResponse) {
                 playButton.classList.toggle("loading");
                 fillData(jsonResponse);
                 startGame();
@@ -1695,29 +1749,29 @@ document.querySelector(".start-game").addEventListener("click", () => {
     }
 });
 
-catButton.addEventListener("click", () => {
+catButton.addEventListener("click", function() {
     toggleMenuList("category");
 });
 
-catButton.addEventListener("focusout", () => {
+catButton.addEventListener("focusout", function() {
     let catList = catButton.nextElementSibling;
     if (catList.classList.contains("opened-list")) {
         toggleMenuList("category");
     }
 });
 
-diffButton.addEventListener("click", () => {
+diffButton.addEventListener("click", function() {
     toggleMenuList("difficulty");
 });
 
-diffButton.addEventListener("focusout", () => {
+diffButton.addEventListener("focusout", function() {
     let diffList = diffButton.nextElementSibling;
     if (diffList.classList.contains("opened-list")) {
         toggleMenuList("difficulty");
     }
 });
 
-document.querySelector(".home-button").addEventListener("click", () => {
+document.querySelector(".home-button").addEventListener("click", function() {
     nextButtonTl.pause().progress(0);
     catButton.disabled = false;
     diffButton.disabled = false;
@@ -1726,7 +1780,7 @@ document.querySelector(".home-button").addEventListener("click", () => {
 });
 
 let soundButton = document.querySelector(".sound-button");
-soundButton.addEventListener("click", () => {
+soundButton.addEventListener("click", function() {
     soundButton.classList.toggle("disabled");
     allowAudio = !allowAudio;
     if (settingsOpen) updateSettingsUI();
@@ -1735,16 +1789,16 @@ soundButton.addEventListener("click", () => {
 let catItems = document.querySelectorAll(".category-list li");
 let diffItems = document.querySelectorAll(".difficulty-list li");
 
-catItems.forEach((li) => {
-    li.addEventListener("mousedown", () => {
+catItems.forEach(function(li) {
+    li.addEventListener("mousedown", function() {
         catButton.innerText = li.innerText;
         catSpan.innerText = li.innerText.toUpperCase();
         category = li.innerText.toLowerCase();
     });
 });
 
-diffItems.forEach((li) => {
-    li.addEventListener("mousedown", () => {
+diffItems.forEach(function(li) {
+    li.addEventListener("mousedown", function() {
         diffButton.innerText = li.innerText;
         diffSpan.innerText = li.innerText;
         difficulty = li.innerText.toLowerCase();
@@ -1753,7 +1807,7 @@ diffItems.forEach((li) => {
 
 document
     .querySelector(".gameover-box .main-menu")
-    .addEventListener("click", () => {
+    .addEventListener("click", function() {
         gsap
             .to(".gameover-box", {
                 duration: 0.25,
@@ -1761,13 +1815,13 @@ document
                 opacity: 0,
                 ease: "none",
             })
-            .then((_) => {
+            .then(function() {
                 nextButtonTl.pause().progress(0);
                 catButton.disabled = false;
                 diffButton.disabled = false;
                 playButton.disabled = false;
                 showMenu();
-                setTimeout(() => {
+                setTimeout(function() {
                     document.querySelector(".gameover-modal").style.visibility =
                         "collapse";
                     if (parallaxInstance) parallaxInstance.enable();
@@ -1778,3 +1832,5 @@ document
 document
     .querySelector(".gameover-box .play-again")
     .addEventListener("click", restartGame);
+
+console.log('Game initialized successfully!');
