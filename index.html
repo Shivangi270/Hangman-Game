@@ -33,6 +33,45 @@
             </svg>
         </div>
 
+        <!-- LANDING PAGE (Shows every time) -->
+        <div class="landing-overlay" id="landingOverlay">
+            <div class="landing-content">
+                <div class="landing-logo">
+                    <svg viewBox="0 0 200 200" class="landing-logo-svg">
+                        <rect x="50" y="30" width="8" height="120" fill="#520ca1" rx="2"/>
+                        <rect x="50" y="30" width="80" height="8" fill="#520ca1" rx="2"/>
+                        <line x1="130" y1="30" x2="130" y2="55" stroke="#520ca1" stroke-width="6" stroke-linecap="round"/>
+                        <path d="M130 55 Q130 75 120 85" stroke="#e6d439" stroke-width="3" fill="none"/>
+                        <ellipse cx="118" cy="88" rx="8" ry="4" stroke="#e6d439" stroke-width="3" fill="none"/>
+                        <rect x="155" y="45" width="22" height="22" rx="4" fill="#e6d439" opacity="0.8"/>
+                        <text x="166" y="61" font-size="14" font-weight="bold" fill="#110320" text-anchor="middle" font-family="Arial">G</text>
+                        <rect x="155" y="70" width="22" height="22" rx="4" fill="#e6d439" opacity="0.6"/>
+                        <text x="166" y="86" font-size="14" font-weight="bold" fill="#110320" text-anchor="middle" font-family="Arial">A</text>
+                        <rect x="155" y="95" width="22" height="22" rx="4" fill="#e6d439" opacity="0.4"/>
+                        <text x="166" y="111" font-size="14" font-weight="bold" fill="#110320" text-anchor="middle" font-family="Arial">M</text>
+                        <rect x="155" y="120" width="22" height="22" rx="4" fill="#e6d439" opacity="0.2"/>
+                        <text x="166" y="136" font-size="14" font-weight="bold" fill="#110320" text-anchor="middle" font-family="Arial">E</text>
+                    </svg>
+                </div>
+                <div class="landing-title">GallowsPeak</div>
+                <div class="landing-subtitle">🗡️ Guess the Word • Clear the Level</div>
+                <div class="landing-avatar-container">
+                    <div class="landing-avatar avatar-display" id="landingAvatar">🦊</div>
+                    <button class="landing-change-avatar" id="landingChangeAvatar">🔄</button>
+                </div>
+                <button class="landing-play-btn" id="landingPlayBtn">▶ Play</button>
+                <div class="landing-footer">
+                    <span>🔥 Daily Streaks</span>
+                    <span>🪙 Coins</span>
+                    <span>💎 Diamonds</span>
+                </div>
+                <!-- Settings Button on Landing Page -->
+                <button class="landing-settings-btn" id="landingSettingsBtn">⚙️ Settings</button>
+                <div class="landing-version">v1.0.0</div>
+            </div>
+        </div>
+
+        <!-- MAIN MENU MODAL -->
         <section class="modal">
             <div class="modal-content drop-down">
                 <div class="menu-container">
@@ -60,7 +99,6 @@
                             <li>Hard</li>
                         </ul>
                     </div>
-                    <!-- Theme Toggle Button -->
                     <button class="menu-button" id="themeToggle">
                         <span id="theme-icon">🌙</span> Theme
                     </button>
@@ -68,6 +106,7 @@
             </div>
         </section>
 
+        <!-- GAME MAIN CONTENT -->
         <main class="main-content blur-in">
             <nav class="nav-bar">
                 <div class="home-container">
@@ -109,6 +148,7 @@
             </svg>
         </main>
 
+        <!-- GAME OVER / LEVEL POPUP -->
         <section class="gameover-modal">
             <div class="gameover-box">
                 <div class="gameover-content">
@@ -131,6 +171,73 @@
             </div>
         </section>
 
+        <!-- SETTINGS POPUP -->
+        <section class="settings-modal" id="settingsModal">
+            <div class="settings-box">
+                <div class="settings-header">
+                    <h2>⚙️ Settings</h2>
+                    <button class="settings-close" id="settingsClose">✕</button>
+                </div>
+                <div class="settings-content">
+                    <!-- Avatar Section -->
+                    <div class="settings-item">
+                        <div class="settings-label">
+                            <span>👤 Avatar</span>
+                            <span class="settings-hint">Tap to change</span>
+                        </div>
+                        <div class="settings-avatar-container">
+                            <div class="settings-avatar-display avatar-display" id="settingsAvatar">🦊</div>
+                            <button class="settings-avatar-change" id="settingsChangeAvatar">🔄 Change</button>
+                        </div>
+                    </div>
+
+                    <!-- Sound Section -->
+                    <div class="settings-item">
+                        <div class="settings-label">
+                            <span>🔊 Sound</span>
+                            <span class="settings-hint" id="soundStatus">On</span>
+                        </div>
+                        <button class="settings-toggle" id="settingsSoundToggle">
+                            <span class="toggle-track">
+                                <span class="toggle-thumb" id="soundToggleThumb"></span>
+                            </span>
+                        </button>
+                    </div>
+
+                    <!-- Theme Section -->
+                    <div class="settings-item">
+                        <div class="settings-label">
+                            <span>🎨 Theme</span>
+                            <span class="settings-hint" id="themeStatus">Dark</span>
+                        </div>
+                        <button class="settings-toggle" id="settingsThemeToggle">
+                            <span class="toggle-track">
+                                <span class="toggle-thumb" id="themeToggleThumb"></span>
+                            </span>
+                        </button>
+                    </div>
+
+                    <!-- Stats Section -->
+                    <div class="settings-item" style="border-bottom: none; padding-bottom: 0;">
+                        <div class="settings-label">
+                            <span>📊 Progress</span>
+                            <span class="settings-hint" id="progressLevel">Level 1</span>
+                        </div>
+                        <div style="display: flex; gap: 15px; font-size: 0.9rem; opacity: 0.7;">
+                            <span id="progressCoins">🪙 100</span>
+                            <span id="progressDiamonds">💎 10</span>
+                            <span id="progressStreak">🔥 0d</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="settings-footer">
+                    <span class="settings-version">v1.0.0</span>
+                    <button class="settings-reset" id="settingsReset">🔄 Reset Progress</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- SCRIPTS -->
         <script defer src="https://code.createjs.com/1.0.0/preloadjs.min.js"></script>
         <script defer src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/16327/gsap-latest-beta.min.js"></script>
         <script defer src="scripts/loader.js"></script>
