@@ -1369,6 +1369,12 @@ const animateScene = () => {
 };
 
 const showMenu = () => {
+    // Hide landing page when menu opens
+    const landingOverlay = document.getElementById('landingOverlay');
+    if (landingOverlay) {
+        landingOverlay.style.display = 'none';
+    }
+    
     modal.style.visibility = "visible";
     modal.style.opacity = 1;
     menuBox.classList.toggle("expand");
