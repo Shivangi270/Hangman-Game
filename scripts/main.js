@@ -11,7 +11,7 @@ let adInProgress = false;
 // YOUR REAL AD UNIT IDs FROM ADMOB CONSOLE
 const BANNER_AD_ID = 'ca-app-pub-5834184703937435/4096610957';
 const INTERSTITIAL_AD_ID = 'ca-app-pub-5834184703937435/8224547901';
-const REWARDED_AD_ID = 'ca-app-pub-5834184703937435/1383839206'; // Replace with your real rewarded ad ID
+const REWARDED_AD_ID = 'ca-app-pub-5834184703937435/1383839206';
 
 function initializeAds() {
     if (adInitialized) return;
@@ -150,6 +150,44 @@ function showInterstitialAd() {
 setTimeout(initializeAds, 1500);
 
 // ============================================
+// AVATAR SYSTEM
+// ============================================
+
+const AVAILABLE_AVATARS = [
+    '🦊', '🐼', '🐨', '🦁', '🐱', '🐶', '🐰', '🦄',
+    '🐧', '🐲', '🦅', '🐺', '🦝', '🐸'
+];
+
+let userAvatar = '🦊';
+
+const loadAvatar = () => {
+    const saved = localStorage.getItem('gallowspeak_avatar');
+    if (saved) {
+        userAvatar = saved;
+    } else {
+        const randomIndex = Math.floor(Math.random() * AVAILABLE_AVATARS.length);
+        userAvatar = AVAILABLE_AVATARS[randomIndex];
+        localStorage.setItem('gallowspeak_avatar', userAvatar);
+    }
+    updateAvatarUI();
+};
+
+const changeAvatar = () => {
+    const currentIndex = AVAILABLE_AVATARS.indexOf(userAvatar);
+    const newIndex = (currentIndex + 1) % AVAILABLE_AVATARS.length;
+    userAvatar = AVAILABLE_AVATARS[newIndex];
+    localStorage.setItem('gallowspeak_avatar', userAvatar);
+    updateAvatarUI();
+};
+
+const updateAvatarUI = () => {
+    const avatarElements = document.querySelectorAll('.avatar-display');
+    avatarElements.forEach(el => {
+        el.textContent = userAvatar;
+    });
+};
+
+// ============================================
 // THEME TOGGLE
 // ============================================
 
@@ -166,8 +204,16 @@ const loadTheme = () => {
 
 const updateThemeIcon = (theme) => {
     const icon = document.getElementById('theme-icon');
+    const toggleBtn = document.getElementById('themeToggle');
     if (icon) {
         icon.textContent = theme === 'light' ? '☀️' : '🌙';
+    }
+    if (toggleBtn) {
+        toggleBtn.innerHTML = `<span id="theme-icon">${theme === 'light' ? '☀️' : '🌙'}</span> Theme`;
+    }
+    // Update settings theme status if open
+    if (settingsOpen) {
+        updateSettingsUI();
     }
 };
 
@@ -178,7 +224,6 @@ const toggleTheme = () => {
     localStorage.setItem('gallowspeak_theme', newTheme);
     updateThemeIcon(newTheme);
     
-    // Apply theme changes to parallax background layers
     const bgContainer = document.querySelector('.bg-container');
     if (bgContainer) {
         if (newTheme === 'light') {
@@ -189,24 +234,144 @@ const toggleTheme = () => {
     }
 };
 
-// Load theme on startup
-loadTheme();
+// ============================================
+// SETTINGS SYSTEM
+// ============================================
 
-// Add event listener when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
-    const toggleBtn = document.getElementById('themeToggle');
-    if (toggleBtn) {
-        toggleBtn.addEventListener('click', toggleTheme);
-    }
-});
+let settingsOpen = false;
 
-// Also add listener if DOM already loaded
-if (document.readyState === 'complete' || document.readyState === 'interactive') {
-    const toggleBtn = document.getElementById('themeToggle');
-    if (toggleBtn) {
-        toggleBtn.addEventListener('click', toggleTheme);
+const openSettings = () => {
+    const modal = document.getElementById('settingsModal');
+    if (!modal) return;
+    
+    updateSettingsUI();
+    modal.classList.add('active');
+    settingsOpen = true;
+    if (parallaxInstance) parallaxInstance.disable();
+};
+
+const closeSettings = () => {
+    const modal = document.getElementById('settingsModal');
+    if (!modal) return;
+    
+    modal.classList.remove('active');
+    settingsOpen = false;
+    if (parallaxInstance) parallaxInstance.enable();
+};
+
+const updateSettingsUI = () => {
+    const avatarDisplay = document.getElementById('settingsAvatar');
+    if (avatarDisplay) avatarDisplay.textContent = userAvatar;
+    
+    const soundStatus = document.getElementById('soundStatus');
+    const soundThumb = document.getElementById('soundToggleThumb');
+    if (soundStatus) soundStatus.textContent = allowAudio ? 'On' : 'Off';
+    if (soundThumb) {
+        soundThumb.classList.toggle('active', allowAudio);
+        const track = soundThumb.parentElement;
+        if (track) track.classList.toggle('active', allowAudio);
     }
-}
+    
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+    const themeStatus = document.getElementById('themeStatus');
+    const themeThumb = document.getElementById('themeToggleThumb');
+    if (themeStatus) themeStatus.textContent = currentTheme === 'light' ? 'Light' : 'Dark';
+    if (themeThumb) {
+        themeThumb.classList.toggle('active', currentTheme === 'light');
+        const track = themeThumb.parentElement;
+        if (track) track.classList.toggle('active', currentTheme === 'light');
+    }
+    
+    const progressLevel = document.getElementById('progressLevel');
+    if (progressLevel && gameStats) progressLevel.textContent = `Level ${gameStats.level || 1}`;
+    
+    const progressCoins = document.getElementById('progressCoins');
+    if (progressCoins && gameStats) progressCoins.textContent = `🪙 ${gameStats.totalCoins || 0}`;
+    
+    const progressDiamonds = document.getElementById('progressDiamonds');
+    if (progressDiamonds && gameStats) progressDiamonds.textContent = `💎 ${gameStats.totalDiamonds || 0}`;
+    
+    const progressStreak = document.getElementById('progressStreak');
+    if (progressStreak && streakData) progressStreak.textContent = `🔥 ${streakData.currentStreak || 0}d`;
+};
+
+// ============================================
+// LANDING PAGE
+// ============================================
+
+const showLandingPage = () => {
+    const existing = document.getElementById('landingOverlay');
+    if (existing) return;
+    
+    const overlay = document.createElement('div');
+    overlay.className = 'landing-overlay';
+    overlay.id = 'landingOverlay';
+    overlay.innerHTML = `
+        <div class="landing-content">
+            <div class="landing-logo">
+                <svg viewBox="0 0 200 200" class="landing-logo-svg">
+                    <rect x="50" y="30" width="8" height="120" fill="#520ca1" rx="2"/>
+                    <rect x="50" y="30" width="80" height="8" fill="#520ca1" rx="2"/>
+                    <line x1="130" y1="30" x2="130" y2="55" stroke="#520ca1" stroke-width="6" stroke-linecap="round"/>
+                    <path d="M130 55 Q130 75 120 85" stroke="#e6d439" stroke-width="3" fill="none"/>
+                    <ellipse cx="118" cy="88" rx="8" ry="4" stroke="#e6d439" stroke-width="3" fill="none"/>
+                    <rect x="155" y="45" width="22" height="22" rx="4" fill="#e6d439" opacity="0.8"/>
+                    <text x="166" y="61" font-size="14" font-weight="bold" fill="#110320" text-anchor="middle" font-family="Arial">G</text>
+                    <rect x="155" y="70" width="22" height="22" rx="4" fill="#e6d439" opacity="0.6"/>
+                    <text x="166" y="86" font-size="14" font-weight="bold" fill="#110320" text-anchor="middle" font-family="Arial">A</text>
+                    <rect x="155" y="95" width="22" height="22" rx="4" fill="#e6d439" opacity="0.4"/>
+                    <text x="166" y="111" font-size="14" font-weight="bold" fill="#110320" text-anchor="middle" font-family="Arial">M</text>
+                    <rect x="155" y="120" width="22" height="22" rx="4" fill="#e6d439" opacity="0.2"/>
+                    <text x="166" y="136" font-size="14" font-weight="bold" fill="#110320" text-anchor="middle" font-family="Arial">E</text>
+                </svg>
+            </div>
+            <div class="landing-title">GallowsPeak</div>
+            <div class="landing-subtitle">🗡️ Guess the Word • Clear the Level</div>
+            <div class="landing-avatar-container">
+                <div class="landing-avatar avatar-display" id="landingAvatar">🦊</div>
+                <button class="landing-change-avatar" id="landingChangeAvatar">🔄</button>
+            </div>
+            <button class="landing-play-btn" id="landingPlayBtn">▶ Play</button>
+            <div class="landing-footer">
+                <span>🔥 Daily Streaks</span>
+                <span>🪙 Coins</span>
+                <span>💎 Diamonds</span>
+            </div>
+            <button class="landing-settings-btn" id="landingSettingsBtn">⚙️ Settings</button>
+            <div class="landing-version">v1.0.0</div>
+        </div>
+    `;
+    document.body.prepend(overlay);
+    
+    // Update avatar
+    updateAvatarUI();
+    
+    // Event Listeners
+    document.getElementById('landingChangeAvatar').addEventListener('click', (e) => {
+        e.stopPropagation();
+        changeAvatar();
+        const avatarDisplay = document.querySelector('.landing-avatar');
+        if (avatarDisplay) avatarDisplay.textContent = userAvatar;
+    });
+    
+    document.getElementById('landingPlayBtn').addEventListener('click', () => {
+        const overlay = document.getElementById('landingOverlay');
+        if (overlay) {
+            overlay.style.transition = 'opacity 0.5s, transform 0.5s';
+            overlay.style.opacity = '0';
+            overlay.style.transform = 'scale(1.1)';
+            setTimeout(() => {
+                overlay.remove();
+                showMenu();
+            }, 500);
+        }
+    });
+    
+    document.getElementById('landingSettingsBtn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        openSettings();
+    });
+};
 
 // ============================================
 // DAILY STREAK SYSTEM
@@ -373,7 +538,6 @@ const saveGameStats = () => {
     saveStreakData();
 };
 
-// Called when a word is cleared
 const onWordCleared = () => {
     gameStats.levelProgress += 1;
     gameStats.wordsCleared += 1;
@@ -383,7 +547,6 @@ const onWordCleared = () => {
     gameStats.totalCoins += wordBonus;
     
     if (gameStats.levelProgress >= 3) {
-        // Level complete!
         gameStats.level += 1;
         gameStats.levelProgress = 0;
         gameStats.levelsCompleted += 1;
@@ -419,7 +582,6 @@ const onWordCleared = () => {
 let levelCoinsEarned = 0;
 let isLevelFailed = false;
 
-// Show Level Complete Popup
 const showLevelComplete = () => {
     const modal = document.querySelector('.gameover-modal');
     const box = modal.querySelector('.gameover-box');
@@ -456,7 +618,6 @@ const showLevelComplete = () => {
     buttons.style.gap = '10px';
     buttons.style.marginTop = '15px';
     
-    // Button 1: Menu
     const menuBtn = document.createElement('button');
     menuBtn.className = 'menu-button';
     menuBtn.style.cssText = `
@@ -477,7 +638,6 @@ const showLevelComplete = () => {
         showMenu();
     });
     
-    // Button 2: Next Level
     const nextBtn = document.createElement('button');
     nextBtn.className = 'menu-button';
     nextBtn.style.cssText = `
@@ -502,7 +662,6 @@ const showLevelComplete = () => {
         continueToNextLevel();
     });
     
-    // Button 3: Double Coins
     const doubleBtn = document.createElement('button');
     doubleBtn.className = 'menu-button';
     doubleBtn.style.cssText = `
@@ -555,11 +714,10 @@ const showLevelComplete = () => {
     gsap.to(modal, { opacity: 1, duration: 0.3 });
     gsap.to(box, { scale: 1, duration: 0.4, ease: 'back.out(1.7)' });
     
-    parallaxInstance.disable();
+    if (parallaxInstance) parallaxInstance.disable();
     isLevelFailed = false;
 };
 
-// Show Level Failed Popup
 const showLevelFailed = (correctWord) => {
     const modal = document.querySelector('.gameover-modal');
     const box = modal.querySelector('.gameover-box');
@@ -577,9 +735,7 @@ const showLevelFailed = (correctWord) => {
             <div style="font-size: 1.5rem; color: #ff6b6b; font-weight: bold; margin-bottom: 10px;">
                 The word was:
             </div>
-            <div style="font-size: 2.5rem; color: white; font-weight: bold; letter-spacing: 4px; 
-                        background: rgba(255,255,255,0.1); padding: 10px 20px; border-radius: 10px;
-                        border: 2px solid rgba(255,255,255,0.2);">
+            <div class="correct-word">
                 ${correctWord.toUpperCase()}
             </div>
             <div style="display: flex; justify-content: space-around; width: 100%; margin-top: 15px; font-size: 1rem;">
@@ -597,7 +753,6 @@ const showLevelFailed = (correctWord) => {
     buttons.style.gap = '10px';
     buttons.style.marginTop = '15px';
     
-    // Button 1: Menu
     const menuBtn = document.createElement('button');
     menuBtn.className = 'menu-button';
     menuBtn.style.cssText = `
@@ -618,7 +773,6 @@ const showLevelFailed = (correctWord) => {
         showMenu();
     });
     
-    // Button 2: Try Again
     const retryBtn = document.createElement('button');
     retryBtn.className = 'menu-button';
     retryBtn.style.cssText = `
@@ -659,7 +813,7 @@ const showLevelFailed = (correctWord) => {
     gsap.to(modal, { opacity: 1, duration: 0.3 });
     gsap.to(box, { scale: 1, duration: 0.4, ease: 'back.out(1.7)' });
     
-    parallaxInstance.disable();
+    if (parallaxInstance) parallaxInstance.disable();
     isLevelFailed = true;
 };
 
@@ -675,7 +829,7 @@ const closeLevelPopup = () => {
             modal.style.visibility = 'collapse';
         }
     });
-    parallaxInstance.enable();
+    if (parallaxInstance) parallaxInstance.enable();
     updateStatsUI();
 };
 
@@ -745,7 +899,7 @@ const showTutorial = () => {
             <span>Play daily to maintain your streak!</span>
         </div>
         <button class="tutorial-got-it" id="tutorial-got-it">Got it! 🚀</button>
-        <div class="tutorial-sub">💡 You can replay this tutorial anytime from settings</div>
+        <div class="tutorial-sub">💡 You can change your avatar in Settings</div>
     `;
     
     document.body.appendChild(overlay);
@@ -992,7 +1146,7 @@ const svg = document.querySelector("#nextIcon");
 let startScene = gsap.timeline({
     defaults: { duration: 2 },
     onComplete: () => {
-        parallaxInstance.enable();
+        if (parallaxInstance) parallaxInstance.enable();
     },
 });
 let nextButtonTl = gsap.timeline({ repeat: -1, yoyo: true });
@@ -1024,7 +1178,6 @@ const CreateNextButton = () => {
     wordContainer.append(nextButton);
 };
 
-// MODIFIED: checkAnswer with level system, shake animation, and game over handling
 const checkAnswer = (value) => {
     let keys = Object.keys(hidden).filter((k) => hidden[k] === value);
     if (keys.length !== 0) {
@@ -1075,7 +1228,6 @@ const checkAnswer = (value) => {
         let button = document.getElementById(`letter-${value}`);
         if (button) {
             button.style.border = "1px solid red";
-            // ADD SHAKE ANIMATION
             button.classList.add('shake');
             setTimeout(() => button.classList.remove('shake'), 500);
         }
@@ -1086,7 +1238,6 @@ const checkAnswer = (value) => {
         reduceGuesses();
         if (typeof pullUp === 'function') pullUp();
         if (guesses === 0) {
-            // Game over / Level Failed!
             disableAllButtons();
             if (nextButton) nextButton.disabled = true;
             if (allowAudio && loseAudio && loseAudio.play) {
@@ -1181,7 +1332,7 @@ let mountains = document.querySelector(".mountains");
 let city = document.querySelector(".city");
 
 const setupScene = () => {
-    parallaxInstance.disable();
+    if (parallaxInstance) parallaxInstance.disable();
     alpha.style.opacity = 0;
     word.style.opacity = 0;
     alpha.classList.toggle("sliding-up");
@@ -1333,7 +1484,7 @@ const restartGame = () => {
             hideLetters(wordArray);
             createLetterElements(wordArray);
             enableAllButtons();
-            parallaxInstance.enable();
+            if (parallaxInstance) parallaxInstance.enable();
             updateStatsUI();
         });
 };
@@ -1376,13 +1527,134 @@ let catButton = document.querySelector(".category-button");
 let diffButton = document.querySelector(".difficulty-button");
 let playButton = document.querySelector(".start-game");
 
-loadSavedBestScore();
-loadGameStats();
-updateStatsUI();
-loadTheme();
+// ============================================
+// SETTINGS EVENT LISTENERS
+// ============================================
 
-// Show tutorial on first launch
-setTimeout(showTutorial, 500);
+document.addEventListener('DOMContentLoaded', () => {
+    // Settings close button
+    const closeBtn = document.getElementById('settingsClose');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeSettings);
+    }
+    
+    // Click outside to close
+    const modal = document.getElementById('settingsModal');
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeSettings();
+            }
+        });
+    }
+    
+    // Avatar change in settings
+    const avatarChangeBtn = document.getElementById('settingsChangeAvatar');
+    if (avatarChangeBtn) {
+        avatarChangeBtn.addEventListener('click', () => {
+            changeAvatar();
+            updateSettingsUI();
+            const landingAvatar = document.querySelector('.landing-avatar');
+            if (landingAvatar) landingAvatar.textContent = userAvatar;
+        });
+    }
+    
+    // Sound toggle in settings
+    const soundToggle = document.getElementById('settingsSoundToggle');
+    if (soundToggle) {
+        soundToggle.addEventListener('click', () => {
+            allowAudio = !allowAudio;
+            const soundBtn = document.querySelector('.sound-button');
+            if (soundBtn) {
+                soundBtn.classList.toggle('disabled', !allowAudio);
+            }
+            updateSettingsUI();
+        });
+    }
+    
+    // Theme toggle in settings
+    const themeToggle = document.getElementById('settingsThemeToggle');
+    if (themeToggle) {
+        themeToggle.addEventListener('click', () => {
+            toggleTheme();
+            updateSettingsUI();
+        });
+    }
+    
+    // Reset progress
+    const resetBtn = document.getElementById('settingsReset');
+    if (resetBtn) {
+        resetBtn.addEventListener('click', () => {
+            if (confirm('⚠️ Are you sure? This will reset ALL your progress, coins, diamonds, and streak!')) {
+                localStorage.removeItem('gallowspeak_streak_data');
+                localStorage.removeItem('gallowspeak_game_stats');
+                localStorage.removeItem('gallowspeak_best_score');
+                localStorage.removeItem('hangmanBestScore');
+                
+                streakData = {
+                    currentStreak: 0,
+                    bestStreak: 0,
+                    lastPlayedDate: null,
+                    dailyRewardClaimed: false,
+                    totalCoins: 100,
+                    totalDiamonds: 10
+                };
+                gameStats = {
+                    level: 1,
+                    levelProgress: 0,
+                    totalCoins: 100,
+                    totalDiamonds: 10,
+                    levelsCompleted: 0,
+                    wordsCleared: 0,
+                    totalWordsCleared: 0
+                };
+                
+                bestScore = 0;
+                if (bestScoreSpan) bestScoreSpan.innerText = '0';
+                
+                saveGameStats();
+                saveStreakData();
+                updateStatsUI();
+                updateSettingsUI();
+                
+                setupGame();
+                hideLetters(wordArray);
+                createLetterElements(wordArray);
+                enableAllButtons();
+                
+                alert('🔄 Progress has been reset! Starting fresh.');
+            }
+        });
+    }
+});
+
+// Escape key to close settings
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && settingsOpen) {
+        closeSettings();
+    }
+});
+
+// ============================================
+// INITIALIZATION
+// ============================================
+
+loadSavedBestScore();
+loadAvatar();
+loadTheme();
+loadGameStats();
+loadStreakData();
+updateStatsUI();
+
+// Show landing page first
+setTimeout(showLandingPage, 500);
+
+// Show tutorial after landing
+setTimeout(showTutorial, 1500);
+
+// ============================================
+// MENU BUTTONS
+// ============================================
 
 document.querySelector(".start-game").addEventListener("click", () => {
     catButton.disabled = true;
@@ -1451,6 +1723,7 @@ let soundButton = document.querySelector(".sound-button");
 soundButton.addEventListener("click", () => {
     soundButton.classList.toggle("disabled");
     allowAudio = !allowAudio;
+    if (settingsOpen) updateSettingsUI();
 });
 
 let catItems = document.querySelectorAll(".category-list li");
@@ -1491,7 +1764,7 @@ document
                 setTimeout(() => {
                     document.querySelector(".gameover-modal").style.visibility =
                         "collapse";
-                    parallaxInstance.enable();
+                    if (parallaxInstance) parallaxInstance.enable();
                 }, 600);
             });
     });
