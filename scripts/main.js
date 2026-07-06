@@ -304,7 +304,6 @@ const updateSettingsUI = () => {
 const showLandingPage = () => {
     console.log('Showing landing page...');
     
-    // Remove any existing landing overlay
     const existing = document.getElementById('landingOverlay');
     if (existing) {
         existing.remove();
@@ -351,62 +350,44 @@ const showLandingPage = () => {
     
     document.body.prepend(overlay);
     
-    console.log('Landing page HTML injected, attaching event listeners...');
-    
-    // ATTACH EVENT LISTENERS
-    const playBtn = document.getElementById('landingPlayBtn');
-    const settingsBtn = document.getElementById('landingSettingsBtn');
-    const avatarBtn = document.getElementById('landingChangeAvatar');
-    
-    if (playBtn) {
-        console.log('Play button found, attaching listener');
-        playBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            console.log('Play button clicked! - Hiding landing and showing menu');
-            const overlay = document.getElementById('landingOverlay');
-            if (overlay) {
-                overlay.style.transition = 'opacity 0.3s';
-                overlay.style.opacity = '0';
-                setTimeout(function() {
-                    overlay.style.display = 'none';
-                    // SHOW MENU DIRECTLY
+    // Event Listeners
+    document.getElementById('landingPlayBtn').addEventListener('click', function(e) {
+        e.stopPropagation();
+        console.log('Play button clicked!');
+        const overlay = document.getElementById('landingOverlay');
+        if (overlay) {
+            overlay.style.transition = 'opacity 0.3s';
+            overlay.style.opacity = '0';
+            setTimeout(function() {
+                overlay.style.display = 'none';
+                // Check if tutorial should show
+                if (localStorage.getItem('tutorial_shown') === 'true') {
+                    // Tutorial already shown, show menu directly
                     showMenu();
-                    // Check if tutorial should show
-                    checkAndShowTutorial();
-                }, 300);
-            }
-        });
-    } else {
-        console.error('Play button not found!');
-    }
+                } else {
+                    // First launch - show tutorial first, then menu
+                    showTutorialAndMenu();
+                }
+            }, 300);
+        }
+    });
     
-    if (settingsBtn) {
-        console.log('Settings button found, attaching listener');
-        settingsBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            console.log('Settings button clicked!');
-            openSettings();
-        });
-    } else {
-        console.error('Settings button not found!');
-    }
+    document.getElementById('landingSettingsBtn').addEventListener('click', function(e) {
+        e.stopPropagation();
+        console.log('Settings button clicked!');
+        openSettings();
+    });
     
-    if (avatarBtn) {
-        console.log('Avatar button found, attaching listener');
-        avatarBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            console.log('Avatar button clicked!');
-            changeAvatar();
-            const avatarDisplay = document.querySelector('.landing-avatar');
-            if (avatarDisplay) {
-                avatarDisplay.textContent = userAvatar;
-            }
-        });
-    } else {
-        console.error('Avatar button not found!');
-    }
+    document.getElementById('landingChangeAvatar').addEventListener('click', function(e) {
+        e.stopPropagation();
+        console.log('Avatar button clicked!');
+        changeAvatar();
+        const avatarDisplay = document.querySelector('.landing-avatar');
+        if (avatarDisplay) {
+            avatarDisplay.textContent = userAvatar;
+        }
+    });
     
-    // Update avatar display
     const avatarDisplay = document.querySelector('.landing-avatar');
     if (avatarDisplay) {
         avatarDisplay.textContent = userAvatar;
@@ -416,56 +397,159 @@ const showLandingPage = () => {
 };
 
 // ============================================
-// TUTORIAL - Shows ONLY ONCE
+// PREMIUM TUTORIAL - Shows ONLY ONCE
 // ============================================
 
-const checkAndShowTutorial = () => {
-    // Check if tutorial has already been shown
-    if (localStorage.getItem('tutorial_shown') === 'true') {
-        console.log('Tutorial already shown, skipping...');
-        return;
-    }
+const showTutorialAndMenu = () => {
+    console.log('Showing premium tutorial for first time...');
     
-    console.log('Showing tutorial for first time...');
-    
+    // Create tutorial overlay
     const overlay = document.createElement('div');
-    overlay.className = 'tutorial-overlay';
-    overlay.id = 'tutorial-overlay';
+    overlay.className = 'tutorial-overlay premium-tutorial';
+    overlay.id = 'tutorialOverlay';
     
     overlay.innerHTML = `
-        <h2>🎯 How to Play</h2>
-        <div class="tutorial-step">
-            <span class="tutorial-icon">🔤</span>
-            <span>Guess letters to complete the hidden word</span>
+        <div class="tutorial-container">
+            <div class="tutorial-header">
+                <div class="tutorial-progress">
+                    <span class="tutorial-step-indicator active" data-step="1"></span>
+                    <span class="tutorial-step-indicator" data-step="2"></span>
+                    <span class="tutorial-step-indicator" data-step="3"></span>
+                    <span class="tutorial-step-indicator" data-step="4"></span>
+                </div>
+                <button class="tutorial-skip" id="tutorialSkip">Skip ✕</button>
+            </div>
+            <div class="tutorial-body">
+                <div class="tutorial-slide active" data-step="1">
+                    <div class="tutorial-icon-wrapper">🔤</div>
+                    <h2>Guess the Word</h2>
+                    <p>Tap letters to uncover the hidden word. Each correct guess reveals a letter!</p>
+                    <div class="tutorial-example">
+                        <span class="tutorial-letter">_</span>
+                        <span class="tutorial-letter">_</span>
+                        <span class="tutorial-letter">A</span>
+                        <span class="tutorial-letter">_</span>
+                        <span class="tutorial-letter">_</span>
+                    </div>
+                </div>
+                <div class="tutorial-slide" data-step="2">
+                    <div class="tutorial-icon-wrapper">🏆</div>
+                    <h2>Clear Levels</h2>
+                    <p>Complete <strong>3 words</strong> to advance to the next level. Each level gets tougher!</p>
+                    <div class="tutorial-example">
+                        <span class="tutorial-level">Level 1</span>
+                        <span class="tutorial-arrow">→</span>
+                        <span class="tutorial-level">Level 2</span>
+                        <span class="tutorial-arrow">→</span>
+                        <span class="tutorial-level">Level 3</span>
+                    </div>
+                </div>
+                <div class="tutorial-slide" data-step="3">
+                    <div class="tutorial-icon-wrapper">🪙</div>
+                    <h2>Earn Rewards</h2>
+                    <p>Get <strong>🪙 10 coins</strong> per word and <strong>🪙 30 bonus coins</strong> for each level cleared!</p>
+                    <div class="tutorial-example">
+                        <span class="tutorial-reward">+10 🪙</span>
+                        <span class="tutorial-reward">+30 🪙</span>
+                        <span class="tutorial-reward">💎 Diamonds</span>
+                    </div>
+                </div>
+                <div class="tutorial-slide" data-step="4">
+                    <div class="tutorial-icon-wrapper">🔥</div>
+                    <h2>Daily Streaks</h2>
+                    <p>Play every day to build your streak. <strong>3-day</strong> streaks give bonus coins!</p>
+                    <div class="tutorial-example">
+                        <span class="tutorial-streak">🔥 1d</span>
+                        <span class="tutorial-streak">🔥 2d</span>
+                        <span class="tutorial-streak">🔥 3d ⭐</span>
+                    </div>
+                </div>
+            </div>
+            <div class="tutorial-footer">
+                <button class="tutorial-prev" id="tutorialPrev">‹ Back</button>
+                <span class="tutorial-counter" id="tutorialCounter">1 / 4</span>
+                <button class="tutorial-next" id="tutorialNext">Next ›</button>
+                <button class="tutorial-got-it" id="tutorialGotIt" style="display: none;">🎯 Got it!</button>
+            </div>
         </div>
-        <div class="tutorial-step">
-            <span class="tutorial-icon">🏆</span>
-            <span>Complete <strong>3 words</strong> to clear a level</span>
-        </div>
-        <div class="tutorial-step">
-            <span class="tutorial-icon">🪙</span>
-            <span>Earn coins & diamonds for your progress</span>
-        </div>
-        <div class="tutorial-step">
-            <span class="tutorial-icon">🔥</span>
-            <span>Play daily to maintain your streak!</span>
-        </div>
-        <button class="tutorial-got-it" id="tutorial-got-it">Got it! 🚀</button>
-        <div class="tutorial-sub">💡 You can change your avatar in Settings</div>
     `;
     
     document.body.appendChild(overlay);
     
-    document.getElementById('tutorial-got-it').addEventListener('click', function() {
-        overlay.style.transition = 'opacity 0.3s';
-        overlay.style.opacity = '0';
-        setTimeout(function() {
-            overlay.remove();
-        }, 300);
-        // Mark tutorial as shown
-        localStorage.setItem('tutorial_shown', 'true');
-        console.log('Tutorial completed and marked as shown');
+    // Tutorial state
+    let currentStep = 1;
+    const totalSteps = 4;
+    
+    const updateTutorial = () => {
+        // Update slides
+        document.querySelectorAll('.tutorial-slide').forEach(slide => {
+            slide.classList.toggle('active', parseInt(slide.dataset.step) === currentStep);
+        });
+        
+        // Update progress indicators
+        document.querySelectorAll('.tutorial-step-indicator').forEach(indicator => {
+            const step = parseInt(indicator.dataset.step);
+            indicator.classList.toggle('active', step <= currentStep);
+            indicator.classList.toggle('completed', step < currentStep);
+        });
+        
+        // Update counter
+        const counter = document.getElementById('tutorialCounter');
+        if (counter) counter.textContent = `${currentStep} / ${totalSteps}`;
+        
+        // Update buttons
+        const prevBtn = document.getElementById('tutorialPrev');
+        const nextBtn = document.getElementById('tutorialNext');
+        const gotItBtn = document.getElementById('tutorialGotIt');
+        
+        if (prevBtn) prevBtn.style.display = currentStep === 1 ? 'none' : 'inline-block';
+        if (nextBtn) nextBtn.style.display = currentStep === totalSteps ? 'none' : 'inline-block';
+        if (gotItBtn) gotItBtn.style.display = currentStep === totalSteps ? 'inline-block' : 'none';
+    };
+    
+    // Event listeners
+    document.getElementById('tutorialNext').addEventListener('click', function() {
+        if (currentStep < totalSteps) {
+            currentStep++;
+            updateTutorial();
+        }
     });
+    
+    document.getElementById('tutorialPrev').addEventListener('click', function() {
+        if (currentStep > 1) {
+            currentStep--;
+            updateTutorial();
+        }
+    });
+    
+    document.getElementById('tutorialGotIt').addEventListener('click', function() {
+        closeTutorial();
+    });
+    
+    document.getElementById('tutorialSkip').addEventListener('click', function() {
+        if (confirm('Skip tutorial? You can always replay it later.')) {
+            closeTutorial();
+        }
+    });
+    
+    const closeTutorial = () => {
+        const overlay = document.getElementById('tutorialOverlay');
+        if (overlay) {
+            overlay.style.transition = 'opacity 0.3s, transform 0.3s';
+            overlay.style.opacity = '0';
+            overlay.style.transform = 'scale(0.95)';
+            setTimeout(function() {
+                overlay.remove();
+                localStorage.setItem('tutorial_shown', 'true');
+                console.log('Tutorial completed and marked as shown');
+                // Show menu after tutorial
+                showMenu();
+            }, 300);
+        }
+    };
+    
+    // Initialize tutorial
+    updateTutorial();
 };
 
 // ============================================
@@ -1425,13 +1509,11 @@ const animateScene = () => {
 const showMenu = () => {
     console.log('Showing menu...');
     
-    // Hide landing page
     const landingOverlay = document.getElementById('landingOverlay');
     if (landingOverlay) {
         landingOverlay.style.display = 'none';
     }
     
-    // Show the modal
     modal.style.visibility = "visible";
     modal.style.opacity = 1;
     menuBox.classList.toggle("expand");
