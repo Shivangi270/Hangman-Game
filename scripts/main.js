@@ -427,7 +427,7 @@ const showTutorialAndMenu = () => {
                     <div class="tutorial-example">
                         <span class="tutorial-letter">_</span>
                         <span class="tutorial-letter">_</span>
-                        <span class="tutorial-letter">A</span>
+                        <span class="tutorial-letter active">A</span>
                         <span class="tutorial-letter">_</span>
                         <span class="tutorial-letter">_</span>
                     </div>
@@ -1506,32 +1506,51 @@ const animateScene = () => {
     }
 };
 
+// ============================================
+// FIXED: showMenu - Menu stays visible
+// ============================================
+
 const showMenu = () => {
     console.log('Showing menu...');
     
+    // Hide landing page
     const landingOverlay = document.getElementById('landingOverlay');
     if (landingOverlay) {
         landingOverlay.style.display = 'none';
     }
     
+    // Show the modal - make sure it stays visible
     modal.style.visibility = "visible";
     modal.style.opacity = 1;
-    menuBox.classList.toggle("expand");
-    menuBox.classList.toggle("drop-down");
-    mainContent.classList.toggle("blur-out");
-    mainContent.classList.toggle("blur-in");
+    modal.style.display = "flex";
     
-    console.log('Menu should be visible now');
+    // Make sure the menu content is visible
+    menuBox.classList.remove("drop-down");
+    menuBox.classList.remove("expand");
+    menuBox.classList.add("drop-down");
+    
+    mainContent.classList.remove("blur-out");
+    mainContent.classList.remove("blur-in");
+    mainContent.classList.add("blur-out");
+    
+    console.log('Menu should now be visible and staying');
 };
 
+// ============================================
+// FIXED: closeMenu - Properly hides menu
+// ============================================
+
 const closeMenu = () => {
-    menuBox.classList.toggle("drop-down");
-    menuBox.classList.toggle("expand");
-    mainContent.classList.toggle("blur-in");
-    mainContent.classList.toggle("blur-out");
+    console.log('Closing menu...');
+    menuBox.classList.remove("drop-down");
+    menuBox.classList.add("expand");
+    mainContent.classList.remove("blur-out");
+    mainContent.classList.add("blur-in");
     modal.style.opacity = 0;
     setTimeout(() => {
         modal.style.visibility = "collapse";
+        modal.style.display = "none";
+        console.log('Menu closed');
     }, 600);
 };
 
