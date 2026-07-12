@@ -360,12 +360,9 @@ const showLandingPage = () => {
             overlay.style.opacity = '0';
             setTimeout(function() {
                 overlay.style.display = 'none';
-                // Check if tutorial should show
                 if (localStorage.getItem('tutorial_shown') === 'true') {
-                    // Tutorial already shown, show menu directly
                     showMenu();
                 } else {
-                    // First launch - show tutorial first, then menu
                     showTutorialAndMenu();
                 }
             }, 300);
@@ -397,13 +394,12 @@ const showLandingPage = () => {
 };
 
 // ============================================
-// PREMIUM TUTORIAL - Shows ONLY ONCE
+// PREMIUM TUTORIAL
 // ============================================
 
 const showTutorialAndMenu = () => {
     console.log('Showing premium tutorial for first time...');
     
-    // Create tutorial overlay
     const overlay = document.createElement('div');
     overlay.className = 'tutorial-overlay premium-tutorial';
     overlay.id = 'tutorialOverlay';
@@ -476,38 +472,28 @@ const showTutorialAndMenu = () => {
     
     document.body.appendChild(overlay);
     
-    // Tutorial state
     let currentStep = 1;
     const totalSteps = 4;
     
     const updateTutorial = () => {
-        // Update slides
         document.querySelectorAll('.tutorial-slide').forEach(slide => {
             slide.classList.toggle('active', parseInt(slide.dataset.step) === currentStep);
         });
-        
-        // Update progress indicators
         document.querySelectorAll('.tutorial-step-indicator').forEach(indicator => {
             const step = parseInt(indicator.dataset.step);
             indicator.classList.toggle('active', step <= currentStep);
             indicator.classList.toggle('completed', step < currentStep);
         });
-        
-        // Update counter
         const counter = document.getElementById('tutorialCounter');
         if (counter) counter.textContent = `${currentStep} / ${totalSteps}`;
-        
-        // Update buttons
         const prevBtn = document.getElementById('tutorialPrev');
         const nextBtn = document.getElementById('tutorialNext');
         const gotItBtn = document.getElementById('tutorialGotIt');
-        
         if (prevBtn) prevBtn.style.display = currentStep === 1 ? 'none' : 'inline-block';
         if (nextBtn) nextBtn.style.display = currentStep === totalSteps ? 'none' : 'inline-block';
         if (gotItBtn) gotItBtn.style.display = currentStep === totalSteps ? 'inline-block' : 'none';
     };
     
-    // Event listeners
     document.getElementById('tutorialNext').addEventListener('click', function() {
         if (currentStep < totalSteps) {
             currentStep++;
@@ -541,14 +527,12 @@ const showTutorialAndMenu = () => {
             setTimeout(function() {
                 overlay.remove();
                 localStorage.setItem('tutorial_shown', 'true');
-                console.log('Tutorial completed and marked as shown');
-                // Show menu after tutorial
+                console.log('Tutorial completed, showing menu...');
                 showMenu();
             }, 300);
         }
     };
     
-    // Initialize tutorial
     updateTutorial();
 };
 
@@ -755,7 +739,7 @@ const onWordCleared = () => {
 };
 
 // ============================================
-// IMPROVED POPUPS
+// POPUPS
 // ============================================
 
 let levelCoinsEarned = 0;
@@ -1507,7 +1491,7 @@ const animateScene = () => {
 };
 
 // ============================================
-// FIXED: showMenu - Menu stays visible
+// FIXED: showMenu - No blur, menu stays visible
 // ============================================
 
 const showMenu = () => {
@@ -1519,39 +1503,40 @@ const showMenu = () => {
         landingOverlay.style.display = 'none';
     }
     
-    // Show the modal - make sure it stays visible
-    modal.style.visibility = "visible";
+    // REMOVE BLUR FROM MAIN CONTENT
+    mainContent.classList.remove('blur-out');
+    mainContent.classList.remove('blur-in');
+    mainContent.style.filter = 'none';
+    
+    // Show the modal
+    modal.style.visibility = 'visible';
     modal.style.opacity = 1;
-    modal.style.display = "flex";
+    modal.style.display = 'flex';
     
-    // Make sure the menu content is visible
-    menuBox.classList.remove("drop-down");
-    menuBox.classList.remove("expand");
-    menuBox.classList.add("drop-down");
-    
-    mainContent.classList.remove("blur-out");
-    mainContent.classList.remove("blur-in");
-    mainContent.classList.add("blur-out");
+    // Reset menu box animation
+    menuBox.classList.remove('drop-down');
+    menuBox.classList.remove('expand');
+    // Force reflow
+    void menuBox.offsetWidth;
+    menuBox.classList.add('drop-down');
     
     console.log('Menu should now be visible and staying');
 };
 
 // ============================================
-// FIXED: closeMenu - Properly hides menu
+// FIXED: closeMenu - Clean close without blur
 // ============================================
 
 const closeMenu = () => {
     console.log('Closing menu...');
-    menuBox.classList.remove("drop-down");
-    menuBox.classList.add("expand");
-    mainContent.classList.remove("blur-out");
-    mainContent.classList.add("blur-in");
+    
+    // Just hide the modal - don't add blur
     modal.style.opacity = 0;
     setTimeout(() => {
-        modal.style.visibility = "collapse";
-        modal.style.display = "none";
+        modal.style.visibility = 'collapse';
+        modal.style.display = 'none';
         console.log('Menu closed');
-    }, 600);
+    }, 300);
 };
 
 const fetchData = (endpoint) => {
@@ -1700,13 +1685,11 @@ let playButton = document.querySelector(".start-game");
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM fully loaded, attaching settings listeners...');
     
-    // Settings close button
     const closeBtn = document.getElementById('settingsClose');
     if (closeBtn) {
         closeBtn.addEventListener('click', closeSettings);
     }
     
-    // Click outside to close
     const modal = document.getElementById('settingsModal');
     if (modal) {
         modal.addEventListener('click', function(e) {
@@ -1716,7 +1699,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Avatar change in settings
     const avatarChangeBtn = document.getElementById('settingsChangeAvatar');
     if (avatarChangeBtn) {
         avatarChangeBtn.addEventListener('click', function() {
@@ -1727,7 +1709,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Sound toggle in settings
     const soundToggle = document.getElementById('settingsSoundToggle');
     if (soundToggle) {
         soundToggle.addEventListener('click', function() {
@@ -1740,7 +1721,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Theme toggle in settings
     const themeToggle = document.getElementById('settingsThemeToggle');
     if (themeToggle) {
         themeToggle.addEventListener('click', function() {
@@ -1749,7 +1729,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Reset progress
     const resetBtn = document.getElementById('settingsReset');
     if (resetBtn) {
         resetBtn.addEventListener('click', function() {
@@ -1796,7 +1775,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Escape key to close settings
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape' && settingsOpen) {
         closeSettings();
@@ -1816,7 +1794,6 @@ loadGameStats();
 loadStreakData();
 updateStatsUI();
 
-// Show landing page after a short delay
 setTimeout(function() {
     console.log('Showing landing page...');
     showLandingPage();
