@@ -191,47 +191,47 @@ const updateAvatarUI = () => {
 // THEME TOGGLE
 // ============================================
 
-const loadTheme = () => {
-    const savedTheme = localStorage.getItem('gallowspeak_theme');
-    if (savedTheme) {
-        document.documentElement.setAttribute('data-theme', savedTheme);
-        updateThemeIcon(savedTheme);
-    } else {
-        document.documentElement.setAttribute('data-theme', 'dark');
-        updateThemeIcon('dark');
-    }
-};
+//const loadTheme = () => {
+//    const savedTheme = localStorage.getItem('gallowspeak_theme');
+//    if (savedTheme) {
+//        document.documentElement.setAttribute('data-theme', savedTheme);
+//        updateThemeIcon(savedTheme);
+//    } else {
+//        document.documentElement.setAttribute('data-theme', 'dark');
+//        updateThemeIcon('dark');
+//    }
+//};
 
-const updateThemeIcon = (theme) => {
-    const icon = document.getElementById('theme-icon');
-    const toggleBtn = document.getElementById('themeToggle');
-    if (icon) {
-        icon.textContent = theme === 'light' ? '☀️' : '🌙';
-    }
-    if (toggleBtn) {
-        toggleBtn.innerHTML = `<span id="theme-icon">${theme === 'light' ? '☀️' : '🌙'}</span> Theme`;
-    }
-    if (settingsOpen) {
-        updateSettingsUI();
-    }
-};
+//const updateThemeIcon = (theme) => {
+//    const icon = document.getElementById('theme-icon');
+//    const toggleBtn = document.getElementById('themeToggle');
+//    if (icon) {
+//        icon.textContent = theme === 'light' ? '☀️' : '🌙';
+//    }
+//    if (toggleBtn) {
+//        toggleBtn.innerHTML = `<span id="theme-icon">${theme === 'light' ? '☀️' : '🌙'}</span> Theme`;
+//    }
+//    if (settingsOpen) {
+//        updateSettingsUI();
+//    }
+//};
 
-const toggleTheme = () => {
-    const currentTheme = document.documentElement.getAttribute('data-theme');
-    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-    document.documentElement.setAttribute('data-theme', newTheme);
-    localStorage.setItem('gallowspeak_theme', newTheme);
-    updateThemeIcon(newTheme);
+//const toggleTheme = () => {
+//    const currentTheme = document.documentElement.getAttribute('data-theme');
+//    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+//    document.documentElement.setAttribute('data-theme', newTheme);
+//    localStorage.setItem('gallowspeak_theme', newTheme);
+//    updateThemeIcon(newTheme);
     
-    const bgContainer = document.querySelector('.bg-container');
-    if (bgContainer) {
-        if (newTheme === 'light') {
-            bgContainer.style.filter = 'brightness(1.1) saturate(1.1)';
-        } else {
-            bgContainer.style.filter = 'none';
-        }
-    }
-};
+//    const bgContainer = document.querySelector('.bg-container');
+//    if (bgContainer) {
+//        if (newTheme === 'light') {
+//            bgContainer.style.filter = 'brightness(1.1) saturate(1.1)';
+//        } else {
+//            bgContainer.style.filter = 'none';
+//        }
+//    }
+//};
 
 // ============================================
 // SETTINGS SYSTEM
