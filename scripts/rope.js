@@ -354,13 +354,14 @@ const loop = () => {
 		ropeLeft.update(false, animateVictim);
 		ropeRight.update();
 		victimAnchor.update();
-		context.drawImage(gallows, -200, 0, canvas.width + 400, canvas.height);
+		// FIXED: Adjusted drawing positions to center the gallows
+		context.drawImage(gallows, -100, -20, canvas.width + 200, canvas.height + 50);
 		context.drawImage(
 			victim,
 			victimAnchor.location.x - 48,
-			victimAnchor.location.y,
+			victimAnchor.location.y + 10,
 			100,
-			250
+			240
 		);
 		context.save();
 		context.translate(anchor3.location.x + 25, anchor3.location.y + 10);
