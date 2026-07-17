@@ -845,7 +845,7 @@ li.letter {
 }
 
 /* ============================================
-   GAME OVER / LEVEL POPUP
+   GAME OVER / LEVEL POPUP - FIXED ALIGNMENT
    ============================================ */
 
 .gameover-modal {
@@ -862,10 +862,10 @@ li.letter {
 }
 
 .gameover-box {
-    height: 45%;
-    width: 32%;
+    height: 50% !important;
+    width: 34% !important;
     min-width: 450px;
-    padding: 40px;
+    padding: 40px 30px;
     background: var(--bg-primary);
     color: var(--text-primary);
     border-radius: 20px;
@@ -885,17 +885,17 @@ li.letter {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    padding: 20px;
+    padding: 25px 15px;
 }
 
 .gameover-box .text {
-    line-height: 60px;
+    line-height: 50px;
     box-sizing: content-box;
     position: absolute;
     font-family: "Luckiest Guy", sans-serif;
     letter-spacing: 2px;
-    top: -40px;
-    font-size: 3rem;
+    top: -35px;
+    font-size: 2.8rem;
     font-weight: bold;
     color: rgb(231, 87, 188);
     text-align: center;
@@ -927,14 +927,15 @@ li.letter {
     color: var(--second-button-color);
 }
 
+/* Level info in popup - better alignment */
 .level-info {
     text-align: center;
     width: 100%;
-    margin-top: 10px;
+    margin-top: 5px;
 }
 
 .level-info .level-title {
-    font-size: 1.8rem;
+    font-size: 1.5rem;
     color: var(--second-button-color);
     font-weight: bold;
 }
@@ -943,13 +944,15 @@ li.letter {
     display: flex;
     justify-content: space-around;
     width: 100%;
-    margin-top: 15px;
-    font-size: 1.1rem;
+    margin-top: 12px;
+    font-size: 1rem;
+    flex-wrap: wrap;
+    gap: 5px;
 }
 
 .level-info .level-total {
-    margin-top: 10px;
-    font-size: 0.9rem;
+    margin-top: 8px;
+    font-size: 0.85rem;
     opacity: 0.6;
 }
 
@@ -980,28 +983,30 @@ li.letter {
 }
 
 .gameover-box .buttons {
-    width: 60%;
+    width: 85%;
     position: absolute;
-    bottom: -30px;
+    bottom: -25px;
     display: flex;
     justify-content: center;
-    gap: 20px;
+    gap: 12px;
+    flex-wrap: wrap;
 }
 
 .buttons .main-menu,
 .buttons .play-again {
     outline: none;
-    height: 50px;
-    width: 120px;
+    height: 45px;
+    min-width: 90px;
+    padding: 0 15px;
     border: none;
     border-radius: 25px;
-    font-size: 1rem;
+    font-size: 0.85rem;
     font-weight: bold;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+    gap: 6px;
 }
 
 .buttons .main-menu {
@@ -1020,13 +1025,14 @@ li.letter {
 }
 
 /* ============================================
-   STATS CONTAINER
+   STATS CONTAINER - RIGHT SIDE (FIXED OVERLAP)
    ============================================ */
 
 .stats-container {
     position: fixed;
     top: 10px;
-    left: 10px;
+    right: 10px;
+    left: auto;
     z-index: 50;
     display: flex !important;
     flex-direction: row !important;
@@ -2143,7 +2149,7 @@ button.letter.shake {
         font-size: 2.1rem;
     }
     .gameover-box {
-        height: 40% !important;
+        height: 45% !important;
         width: 45% !important;
         min-width: auto;
         padding: 30px 20px;
@@ -2154,7 +2160,7 @@ button.letter.shake {
     }
     .gameover-box .text {
         line-height: 40px;
-        font-size: 2.4rem;
+        font-size: 2.2rem;
         width: 100%;
         top: -25px;
         text-align: center;
@@ -2168,19 +2174,20 @@ button.letter.shake {
     }
     .gameover-box .buttons {
         bottom: -20px;
-        gap: 12px;
+        gap: 10px;
     }
     .buttons .main-menu,
     .buttons .play-again {
         height: 40px;
-        width: 90px;
+        min-width: 80px;
         font-size: 0.8rem;
+        padding: 0 12px;
     }
     .stats-container {
         font-size: 0.7rem;
         padding: 5px 10px;
         top: 6px;
-        left: 6px;
+        right: 6px;
         gap: 8px !important;
     }
     .tutorial-container {
@@ -2264,7 +2271,7 @@ button.letter.shake {
         font-size: 2.1rem;
     }
     .gameover-box {
-        height: 35% !important;
+        height: 40% !important;
         width: 55% !important;
         min-width: auto;
         padding: 30px 20px;
@@ -2289,19 +2296,20 @@ button.letter.shake {
     }
     .gameover-box .buttons {
         bottom: -20px;
-        gap: 12px;
+        gap: 10px;
     }
     .buttons .main-menu,
     .buttons .play-again {
         height: 40px;
-        width: 90px;
+        min-width: 80px;
         font-size: 0.8rem;
+        padding: 0 12px;
     }
     .stats-container {
         font-size: 0.7rem;
         padding: 5px 10px;
         top: 6px;
-        left: 6px;
+        right: 6px;
         gap: 8px !important;
     }
     .tutorial-container {
@@ -2324,41 +2332,36 @@ button.letter.shake {
         font-size: 0.6rem;
         padding: 4px 10px;
         top: 5px;
-        left: 5px;
-        gap: 8px !important;
+        right: 5px;
+        gap: 6px !important;
     }
     .gameover-box {
-        height: 42% !important;
-        width: 85% !important;
+        height: 48% !important;
+        width: 90% !important;
         min-width: auto;
-        padding: 30px 15px;
+        padding: 25px 15px;
     }
     .gameover-box .text {
-        font-size: 2rem;
-        top: -30px;
-        line-height: 40px;
+        font-size: 1.8rem;
+        top: -25px;
+        line-height: 35px;
     }
     .level-info .level-title {
-        font-size: 1.4rem;
+        font-size: 1.2rem;
     }
     .level-info .level-stats {
-        font-size: 0.9rem;
-        flex-wrap: wrap;
-        gap: 5px;
-    }
-    .correct-word {
-        font-size: 1.8rem;
-        padding: 8px 15px;
+        font-size: 0.85rem;
     }
     .buttons .main-menu,
     .buttons .play-again {
         height: 38px;
-        width: 85px;
-        font-size: 0.8rem;
+        min-width: 75px;
+        font-size: 0.75rem;
+        padding: 0 12px;
     }
     .gameover-box .buttons {
-        gap: 10px;
-        flex-wrap: wrap;
+        gap: 8px;
+        bottom: -20px;
     }
     .landing-title {
         font-size: 2.2rem;
@@ -2468,26 +2471,34 @@ button.letter.shake {
         font-size: 0.55rem;
         padding: 3px 8px;
         top: 4px;
-        left: 4px;
-        gap: 6px !important;
+        right: 4px;
+        gap: 4px !important;
     }
     .gameover-box {
-        height: 55% !important;
-        width: 60% !important;
+        height: 60% !important;
+        width: 55% !important;
         min-width: auto;
-        padding: 20px;
+        padding: 20px 15px;
     }
     .gameover-box .text {
-        font-size: 1.8rem;
-        top: -25px;
-        line-height: 30px;
+        font-size: 1.5rem;
+        top: -20px;
+        line-height: 28px;
     }
     .level-info .level-stats {
         font-size: 0.8rem;
+        margin-top: 8px;
     }
-    .correct-word {
-        font-size: 1.5rem;
-        padding: 5px 12px;
+    .buttons .main-menu,
+    .buttons .play-again {
+        height: 34px;
+        min-width: 65px;
+        font-size: 0.7rem;
+        padding: 0 10px;
+    }
+    .gameover-box .buttons {
+        gap: 6px;
+        bottom: -16px;
     }
     .landing-logo-svg {
         width: 70px;
@@ -2575,13 +2586,6 @@ button.letter.shake {
     .tutorial-step-indicator {
         width: 24px;
         height: 3px;
-    }
-    .buttons .main-menu,
-    .buttons .play-again {
-        height: 34px;
-        width: 75px;
-        font-size: 0.7rem;
-        border-radius: 20px;
     }
     .tutorial-prev,
     .tutorial-next {
