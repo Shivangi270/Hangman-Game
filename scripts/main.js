@@ -11,7 +11,7 @@ let adInProgress = false;
 // YOUR REAL AD UNIT IDs FROM ADMOB CONSOLE
 const BANNER_AD_ID = 'ca-app-pub-5834184703937435/4096610957';
 const INTERSTITIAL_AD_ID = 'ca-app-pub-5834184703937435/8224547901';
-const REWARDED_AD_ID = 'ca-app-pub-5834184703937435/1383839206';
+const REWARDED_AD_ID = 'ca-app-pub-3940256099942544/5224357317';
 
 function initializeAds() {
     if (adInitialized) return;
@@ -188,50 +188,49 @@ const updateAvatarUI = () => {
 };
 
 // ============================================
-// THEME TOGGLE
+// THEME SYSTEM
 // ============================================
 
-//const loadTheme = () => {
-//    const savedTheme = localStorage.getItem('gallowspeak_theme');
-//    if (savedTheme) {
-//        document.documentElement.setAttribute('data-theme', savedTheme);
-//        updateThemeIcon(savedTheme);
-//    } else {
-//        document.documentElement.setAttribute('data-theme', 'dark');
-//        updateThemeIcon('dark');
-//    }
-//};
+const loadTheme = () => {
+    const savedTheme = localStorage.getItem('gallowspeak_theme');
+    if (savedTheme) {
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        updateThemeStatus(savedTheme);
+    } else {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        updateThemeStatus('dark');
+    }
+};
 
-//const updateThemeIcon = (theme) => {
-//    const icon = document.getElementById('theme-icon');
-//    const toggleBtn = document.getElementById('themeToggle');
-//    if (icon) {
-//        icon.textContent = theme === 'light' ? '☀️' : '🌙';
-//    }
-//    if (toggleBtn) {
-//        toggleBtn.innerHTML = `<span id="theme-icon">${theme === 'light' ? '☀️' : '🌙'}</span> Theme`;
-//    }
-//    if (settingsOpen) {
-//        updateSettingsUI();
-//    }
-//};
+const updateThemeStatus = (theme) => {
+    const status = document.getElementById('themeStatus');
+    if (status) {
+        status.textContent = theme === 'light' ? 'Light' : 'Dark';
+    }
+    const thumb = document.getElementById('themeToggleThumb');
+    if (thumb) {
+        thumb.classList.toggle('active', theme === 'light');
+        const track = thumb.parentElement;
+        if (track) track.classList.toggle('active', theme === 'light');
+    }
+};
 
-//const toggleTheme = () => {
-//    const currentTheme = document.documentElement.getAttribute('data-theme');
-//    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-//    document.documentElement.setAttribute('data-theme', newTheme);
-//    localStorage.setItem('gallowspeak_theme', newTheme);
-//    updateThemeIcon(newTheme);
+const toggleTheme = () => {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('gallowspeak_theme', newTheme);
+    updateThemeStatus(newTheme);
     
-//    const bgContainer = document.querySelector('.bg-container');
-//    if (bgContainer) {
-//        if (newTheme === 'light') {
-//            bgContainer.style.filter = 'brightness(1.1) saturate(1.1)';
-//        } else {
-//            bgContainer.style.filter = 'none';
-//        }
-//    }
-//};
+    const bgContainer = document.querySelector('.bg-container');
+    if (bgContainer) {
+        if (newTheme === 'light') {
+            bgContainer.style.filter = 'brightness(1.1) saturate(1.1)';
+        } else {
+            bgContainer.style.filter = 'none';
+        }
+    }
+};
 
 // ============================================
 // SETTINGS SYSTEM
@@ -241,12 +240,36 @@ let settingsOpen = false;
 
 const openSettings = () => {
     const modal = document.getElementById('settingsModal');
-    if (!modal) {
-        console.warn('Settings modal not found in DOM');
-        return;
+    if (!modal) return;
+    
+    // Update all settings UI
+    const avatarDisplay = document.getElementById('settingsAvatar');
+    if (avatarDisplay) avatarDisplay.textContent = userAvatar;
+    
+    const soundStatus = document.getElementById('soundStatus');
+    const soundThumb = document.getElementById('soundToggleThumb');
+    if (soundStatus) soundStatus.textContent = allowAudio ? 'On' : 'Off';
+    if (soundThumb) {
+        soundThumb.classList.toggle('active', allowAudio);
+        const track = soundThumb.parentElement;
+        if (track) track.classList.toggle('active', allowAudio);
     }
     
-    updateSettingsUI();
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+    updateThemeStatus(currentTheme);
+    
+    const progressLevel = document.getElementById('progressLevel');
+    if (progressLevel && gameStats) progressLevel.textContent = `Level ${gameStats.level || 1}`;
+    
+    const progressCoins = document.getElementById('progressCoins');
+    if (progressCoins && gameStats) progressCoins.textContent = `🪙 ${gameStats.totalCoins || 0}`;
+    
+    const progressDiamonds = document.getElementById('progressDiamonds');
+    if (progressDiamonds && gameStats) progressDiamonds.textContent = `💎 ${gameStats.totalDiamonds || 0}`;
+    
+    const progressStreak = document.getElementById('progressStreak');
+    if (progressStreak && streakData) progressStreak.textContent = `🔥 ${streakData.currentStreak || 0}d`;
+    
     modal.classList.add('active');
     settingsOpen = true;
     if (parallaxInstance) parallaxInstance.disable();
@@ -261,49 +284,11 @@ const closeSettings = () => {
     if (parallaxInstance) parallaxInstance.enable();
 };
 
-const updateSettingsUI = () => {
-    const avatarDisplay = document.getElementById('settingsAvatar');
-    if (avatarDisplay) avatarDisplay.textContent = userAvatar;
-    
-    const soundStatus = document.getElementById('soundStatus');
-    const soundThumb = document.getElementById('soundToggleThumb');
-    if (soundStatus) soundStatus.textContent = allowAudio ? 'On' : 'Off';
-    if (soundThumb) {
-        soundThumb.classList.toggle('active', allowAudio);
-        const track = soundThumb.parentElement;
-        if (track) track.classList.toggle('active', allowAudio);
-    }
-    
-    const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
-    const themeStatus = document.getElementById('themeStatus');
-    const themeThumb = document.getElementById('themeToggleThumb');
-    if (themeStatus) themeStatus.textContent = currentTheme === 'light' ? 'Light' : 'Dark';
-    if (themeThumb) {
-        themeThumb.classList.toggle('active', currentTheme === 'light');
-        const track = themeThumb.parentElement;
-        if (track) track.classList.toggle('active', currentTheme === 'light');
-    }
-    
-    const progressLevel = document.getElementById('progressLevel');
-    if (progressLevel && gameStats) progressLevel.textContent = `Level ${gameStats.level || 1}`;
-    
-    const progressCoins = document.getElementById('progressCoins');
-    if (progressCoins && gameStats) progressCoins.textContent = `🪙 ${gameStats.totalCoins || 0}`;
-    
-    const progressDiamonds = document.getElementById('progressDiamonds');
-    if (progressDiamonds && gameStats) progressDiamonds.textContent = `💎 ${gameStats.totalDiamonds || 0}`;
-    
-    const progressStreak = document.getElementById('progressStreak');
-    if (progressStreak && streakData) progressStreak.textContent = `🔥 ${streakData.currentStreak || 0}d`;
-};
-
 // ============================================
 // LANDING PAGE
 // ============================================
 
 const showLandingPage = () => {
-    console.log('Showing landing page...');
-    
     const existing = document.getElementById('landingOverlay');
     if (existing) {
         existing.remove();
@@ -353,7 +338,6 @@ const showLandingPage = () => {
     // Event Listeners
     document.getElementById('landingPlayBtn').addEventListener('click', function(e) {
         e.stopPropagation();
-        console.log('Play button clicked!');
         const overlay = document.getElementById('landingOverlay');
         if (overlay) {
             overlay.style.transition = 'opacity 0.3s';
@@ -371,13 +355,11 @@ const showLandingPage = () => {
     
     document.getElementById('landingSettingsBtn').addEventListener('click', function(e) {
         e.stopPropagation();
-        console.log('Settings button clicked!');
         openSettings();
     });
     
     document.getElementById('landingChangeAvatar').addEventListener('click', function(e) {
         e.stopPropagation();
-        console.log('Avatar button clicked!');
         changeAvatar();
         const avatarDisplay = document.querySelector('.landing-avatar');
         if (avatarDisplay) {
@@ -389,8 +371,6 @@ const showLandingPage = () => {
     if (avatarDisplay) {
         avatarDisplay.textContent = userAvatar;
     }
-    
-    console.log('Landing page setup complete');
 };
 
 // ============================================
@@ -398,8 +378,6 @@ const showLandingPage = () => {
 // ============================================
 
 const showTutorialAndMenu = () => {
-    console.log('Showing premium tutorial for first time...');
-    
     const overlay = document.createElement('div');
     overlay.className = 'tutorial-overlay premium-tutorial';
     overlay.id = 'tutorialOverlay';
@@ -527,7 +505,6 @@ const showTutorialAndMenu = () => {
             setTimeout(function() {
                 overlay.remove();
                 localStorage.setItem('tutorial_shown', 'true');
-                console.log('Tutorial completed, showing menu...');
                 showMenu();
             }, 300);
         }
@@ -571,7 +548,6 @@ const updateStreak = () => {
     const lastPlayed = streakData.lastPlayedDate ? new Date(streakData.lastPlayedDate).toDateString() : null;
     
     if (lastPlayed === today) {
-        console.log(`Streak: ${streakData.currentStreak} days (already played today)`);
         return;
     }
     
@@ -587,17 +563,14 @@ const updateStreak = () => {
         streakData.lastPlayedDate = new Date().toISOString();
         
         let bonusCoins = 0;
-        let bonusDiamonds = 0;
         let bonusMessage = '';
         
         if (streakData.currentStreak >= 30) {
             bonusCoins = 200;
-            bonusDiamonds = 20;
-            bonusMessage = `🏆 30-Day Streak! +200 Coins & +20 Diamonds!`;
+            bonusMessage = `🏆 30-Day Streak! +200 Coins!`;
         } else if (streakData.currentStreak >= 14) {
             bonusCoins = 100;
-            bonusDiamonds = 10;
-            bonusMessage = `⭐ 14-Day Streak! +100 Coins & +10 Diamonds!`;
+            bonusMessage = `⭐ 14-Day Streak! +100 Coins!`;
         } else if (streakData.currentStreak >= 7) {
             bonusCoins = 50;
             bonusMessage = `🔥 7-Day Streak! +50 Coins!`;
@@ -606,24 +579,20 @@ const updateStreak = () => {
             bonusMessage = `🌟 3-Day Streak! +20 Coins!`;
         }
         
-        if (bonusCoins > 0 || bonusDiamonds > 0) {
+        if (bonusCoins > 0) {
             streakData.totalCoins += bonusCoins;
-            streakData.totalDiamonds += bonusDiamonds;
             showStreakBonus(bonusMessage);
         }
         
         saveStreakData();
-        console.log(`Streak increased to: ${streakData.currentStreak} days`);
     } else if (lastPlayed !== today && lastPlayed !== yesterdayStr) {
         if (streakData.totalDiamonds >= 5 && streakData.currentStreak > 0) {
             streakData.totalDiamonds -= 5;
             streakData.lastPlayedDate = new Date().toISOString();
             showStreakBonus(`🛡️ Streak Freeze Used! (-5 Diamonds)`);
-            console.log('Streak freeze used!');
         } else {
             streakData.currentStreak = 1;
             streakData.lastPlayedDate = new Date().toISOString();
-            console.log('Streak reset to 1');
         }
         saveStreakData();
     }
@@ -776,11 +745,11 @@ const showLevelComplete = () => {
         </div>
     `;
     
-    buttons.style.width = '90%';
+    buttons.style.width = '85%';
     buttons.style.display = 'flex';
     buttons.style.flexDirection = 'row';
     buttons.style.justifyContent = 'center';
-    buttons.style.gap = '10px';
+    buttons.style.gap = '12px';
     buttons.style.marginTop = '15px';
     
     const menuBtn = document.createElement('button');
@@ -913,11 +882,11 @@ const showLevelFailed = (correctWord) => {
         </div>
     `;
     
-    buttons.style.width = '90%';
+    buttons.style.width = '85%';
     buttons.style.display = 'flex';
     buttons.style.flexDirection = 'row';
     buttons.style.justifyContent = 'center';
-    buttons.style.gap = '10px';
+    buttons.style.gap = '12px';
     buttons.style.marginTop = '15px';
     
     const menuBtn = document.createElement('button');
@@ -1491,19 +1460,17 @@ const animateScene = () => {
 };
 
 // ============================================
-// FIXED: showMenu - No blur, menu stays visible
+// SHOW MENU - FIXED
 // ============================================
 
 const showMenu = () => {
-    console.log('Showing menu...');
-    
     // Hide landing page
     const landingOverlay = document.getElementById('landingOverlay');
     if (landingOverlay) {
         landingOverlay.style.display = 'none';
     }
     
-    // REMOVE BLUR FROM MAIN CONTENT
+    // Remove blur from main content
     mainContent.classList.remove('blur-out');
     mainContent.classList.remove('blur-in');
     mainContent.style.filter = 'none';
@@ -1516,26 +1483,19 @@ const showMenu = () => {
     // Reset menu box animation
     menuBox.classList.remove('drop-down');
     menuBox.classList.remove('expand');
-    // Force reflow
     void menuBox.offsetWidth;
     menuBox.classList.add('drop-down');
-    
-    console.log('Menu should now be visible and staying');
 };
 
 // ============================================
-// FIXED: closeMenu - Clean close without blur
+// CLOSE MENU - FIXED
 // ============================================
 
 const closeMenu = () => {
-    console.log('Closing menu...');
-    
-    // Just hide the modal - don't add blur
     modal.style.opacity = 0;
     setTimeout(() => {
         modal.style.visibility = 'collapse';
         modal.style.display = 'none';
-        console.log('Menu closed');
     }, 300);
 };
 
@@ -1683,13 +1643,13 @@ let playButton = document.querySelector(".start-game");
 // ============================================
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM fully loaded, attaching settings listeners...');
-    
+    // Settings close button
     const closeBtn = document.getElementById('settingsClose');
     if (closeBtn) {
         closeBtn.addEventListener('click', closeSettings);
     }
     
+    // Click outside to close
     const modal = document.getElementById('settingsModal');
     if (modal) {
         modal.addEventListener('click', function(e) {
@@ -1699,16 +1659,19 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    // Avatar change in settings
     const avatarChangeBtn = document.getElementById('settingsChangeAvatar');
     if (avatarChangeBtn) {
         avatarChangeBtn.addEventListener('click', function() {
             changeAvatar();
-            updateSettingsUI();
-            const landingAvatar = document.querySelector('.landing-avatar');
-            if (landingAvatar) landingAvatar.textContent = userAvatar;
+            const avatarDisplay = document.querySelector('.landing-avatar');
+            if (avatarDisplay) avatarDisplay.textContent = userAvatar;
+            const settingsAvatar = document.getElementById('settingsAvatar');
+            if (settingsAvatar) settingsAvatar.textContent = userAvatar;
         });
     }
     
+    // Sound toggle in settings
     const soundToggle = document.getElementById('settingsSoundToggle');
     if (soundToggle) {
         soundToggle.addEventListener('click', function() {
@@ -1717,18 +1680,26 @@ document.addEventListener('DOMContentLoaded', function() {
             if (soundBtn) {
                 soundBtn.classList.toggle('disabled', !allowAudio);
             }
-            updateSettingsUI();
+            const soundStatus = document.getElementById('soundStatus');
+            if (soundStatus) soundStatus.textContent = allowAudio ? 'On' : 'Off';
+            const soundThumb = document.getElementById('soundToggleThumb');
+            if (soundThumb) {
+                soundThumb.classList.toggle('active', allowAudio);
+                const track = soundThumb.parentElement;
+                if (track) track.classList.toggle('active', allowAudio);
+            }
         });
     }
     
+    // Theme toggle in settings
     const themeToggle = document.getElementById('settingsThemeToggle');
     if (themeToggle) {
         themeToggle.addEventListener('click', function() {
             toggleTheme();
-            updateSettingsUI();
         });
     }
     
+    // Reset progress
     const resetBtn = document.getElementById('settingsReset');
     if (resetBtn) {
         resetBtn.addEventListener('click', function() {
@@ -1762,7 +1733,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 saveGameStats();
                 saveStreakData();
                 updateStatsUI();
-                updateSettingsUI();
+                
+                // Update settings UI
+                const progressLevel = document.getElementById('progressLevel');
+                if (progressLevel) progressLevel.textContent = 'Level 1';
+                const progressCoins = document.getElementById('progressCoins');
+                if (progressCoins) progressCoins.textContent = '🪙 100';
+                const progressDiamonds = document.getElementById('progressDiamonds');
+                if (progressDiamonds) progressDiamonds.textContent = '💎 10';
+                const progressStreak = document.getElementById('progressStreak');
+                if (progressStreak) progressStreak.textContent = '🔥 0d';
                 
                 setupGame();
                 hideLetters(wordArray);
@@ -1775,6 +1755,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+// Escape key to close settings
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape' && settingsOpen) {
         closeSettings();
@@ -1785,8 +1766,6 @@ document.addEventListener('keydown', function(e) {
 // INITIALIZATION
 // ============================================
 
-console.log('Initializing game...');
-
 loadSavedBestScore();
 loadAvatar();
 loadTheme();
@@ -1795,7 +1774,6 @@ loadStreakData();
 updateStatsUI();
 
 setTimeout(function() {
-    console.log('Showing landing page...');
     showLandingPage();
 }, 300);
 
@@ -1870,7 +1848,16 @@ let soundButton = document.querySelector(".sound-button");
 soundButton.addEventListener("click", function() {
     soundButton.classList.toggle("disabled");
     allowAudio = !allowAudio;
-    if (settingsOpen) updateSettingsUI();
+    if (settingsOpen) {
+        const soundStatus = document.getElementById('soundStatus');
+        if (soundStatus) soundStatus.textContent = allowAudio ? 'On' : 'Off';
+        const soundThumb = document.getElementById('soundToggleThumb');
+        if (soundThumb) {
+            soundThumb.classList.toggle('active', allowAudio);
+            const track = soundThumb.parentElement;
+            if (track) track.classList.toggle('active', allowAudio);
+        }
+    }
 });
 
 let catItems = document.querySelectorAll(".category-list li");
@@ -1919,5 +1906,3 @@ document
 document
     .querySelector(".gameover-box .play-again")
     .addEventListener("click", restartGame);
-
-console.log('Game initialized successfully!');
